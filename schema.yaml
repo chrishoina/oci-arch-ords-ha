@@ -3,8 +3,8 @@
 
     title: "Deploy Oracle REST Data Services with High Availability in OCI"
     stackDescription: "Deploy Oracle REST Data Services with High Availability in OCI."
-    schemaVersion: 1.0.0
-    version: "20210720"
+    schemaVersion: 2.0.0
+    version: "20250314"
     locale: "en"
 
     variableGroups:
@@ -25,8 +25,8 @@
     - title: Required Configuration
       visible: true  
       variables:
-      - ATP_password
-      - ATP_private_endpoint 
+      - ADB_password
+      - ADB_private_endpoint 
       - number_of_midtiers
       - compartment_ocid
       - availability_domain_name      
@@ -110,12 +110,12 @@
         dependsOn:
           compartmentId: ${compartment_ocid}
 
-      ATP_password:
+      autonomous_database_admin_password:
         type: password
         required: true
         visibile: true
-        title: "ATP Database Password for ADMIN user."
-        description: "ATP Database Password for ADMIN user."
+        title: "ADB Database Password for ADMIN user."
+        description: "ADB Database Password for ADMIN user."
         minLength: 12
         maxLength: 30
         pattern: ^[A-Za-z][A-Za-z0-9_#\$]+$ 
@@ -177,7 +177,7 @@
         required: false
         title: "Instance Shape"
         description: "A shape is a template that determines the number of CPUs, amount of memory, and other resources allocated to a newly created instance."
-        default: "VM.Standard.E3.Flex"
+        default: "VM.Standard.E4.Flex"
         dependsOn:
           compartmentId: ${compartment_ocid}
 
@@ -195,16 +195,22 @@
             - or:
               - eq:
                 - instance_shape 
+                - "VM.Standard.A2.Flex"
+              - eq:
+                - instance_shape 
                 - "VM.Standard.E3.Flex"
               - eq:
                 - instance_shape 
-                - "VM.Standard.E4.Flex"
+                - "VM.Standard3.Flex"
               - eq:
                 - instance_shape 
                 - "VM.Optimized3.Flex"
               - eq:
-                - instance_shape 
-                - "VM.Standard.A1.Flex"
+                - instance_shape
+                - "VM.DenseIO.E4.Flex"
+              - eq:
+                - instace_shape
+                - "VM.Standard.E5.Flex"
 
       instance_flex_shape_memory:
         type: number
@@ -212,25 +218,30 @@
         minimum: 1
         maximum: 128
         multipleOf: 1
-        default: 10
+        default: 16
         title: "Flex Shape Memory (GB)"
         description: "Choose number GB for Flex Shape Memory."
         visible:
           and:
-            - or:
+          - or:
+              - eq:
+                - instance_shape 
+                - "VM.Standard.A2.Flex"
               - eq:
                 - instance_shape 
                 - "VM.Standard.E3.Flex"
               - eq:
-                - instance_shape
-                - "VM.Standard.E4.Flex"
+                - instance_shape 
+                - "VM.Standard3.Flex"
               - eq:
                 - instance_shape 
                 - "VM.Optimized3.Flex"
               - eq:
-                - instance_shape 
-                - "VM.Standard.A1.Flex"
-      
+                - instance_shape
+                - "VM.DenseIO.E4.Flex"
+              - eq:
+                - instace_shape
+                - "VM.Standard.E5.Flex"
       instance_os:
         type: enum
         required: false
@@ -245,12 +256,12 @@
         required: false
         title: "Instance OS version"
         description: "An Operating System version that determines the operating system version for the instance."
-        default: "7.9"
+        default: "9.5"
         enum: 
-          - "7.8"
-          - "7.9"
+          - "8"
+          - "9.5"
 
-      ATP_private_endpoint:
+      autonomous_database_private_endpoint:
         type: boolean
         visibile: true
         default: false
@@ -258,7 +269,7 @@
         title: "ATP Database Private Endpoint"
         description: "Check the box to deploy ATP Database with Private Endpoint."
 
-      ATP_data_guard_enabled:
+      autonomous_database_is_data_guard_enabled:
         type: boolean
         required: true
         visibile: true
@@ -266,17 +277,17 @@
         title: "ATP Database DataGuard" 
         description: "Check the box to enable ATP Database DataGuard." 
 
-      ATP_database_cpu_core_count:
+      autonomous_database_cpu_core_count:
         type: number
         required: false
         minimum: 1
         maximum: 128
         multipleOf: 1
         default: 1
-        title: "ATP Database CPU Core Count"
-        description: "Choose ATP Database CPU Core Count."
+        title: "ADB Database CPU Core Count"
+        description: "Choose ADB Database CPU Core Count."
 
-      ATP_database_data_storage_size_in_tbs:
+      autonomous_database_data_storage_size_in_tbs:
         type: number
         required: false
         minimum: 1
@@ -286,30 +297,30 @@
         title: "ATP Database Data Storage Size (TB)"
         description: "Choose ATP Database Data Storage Size in terabytes."
 
-      ATP_database_db_name:
+      autonomous_database_db_name:
         type: string
         required: false
-        default: "ORDSATP"
-        title: "ATP Database DBNAME"
-        description: "Choose ATP Database DBNAME."
+        default: "ORDSADB"
+        title: "ADB Database DBNAME"
+        description: "Choose ADB Database DBNAME."
 
-      ATP_database_db_version:
+      autonomous_database_db_version:
         type: enum
         required: false
-        default: "19c"
-        title: "ATP Database Version"
-        description: "Choose ATP Database Version."
+        default: "23ai"
+        title: "ADB Database Version"
+        description: "Choose ADB Database Version."
         enum:
-          - "19c"
+          - "23ai"
 
-      ATP_database_display_name:
+      autonomous_database_display_name:
         type: string
         required: false
-        default: "ORDSATP"
-        title: "ATP Database Display Name"
-        description: "Choose ATP Database Display Name."
+        default: "ORDSADB"
+        title: "ADB Database Display Name"
+        description: "Choose ADB Database Display Name."
 
-      ATP_database_license_model:
+      autonomous_database_license_model:
         type: enum
         required: false
         default: "LICENSE_INCLUDED"
@@ -319,31 +330,31 @@
           - "LICENSE_INCLUDED"
           - "BRING_YOUR_OWN_LICENSE"
 
-      ATP_tde_wallet_zip_file:
+      oci_database_autonomous_database_wallet:
         type: string
         required: false
         visible: false
-        default: "tde_wallet_ORDSATP.zip"
+        default: "Wallet_ORDSADB.zip"
         title: "ATP Database TDE Wallet ZIP File"
         description: "Choose ATP Database TDE Wallet ZIP File."
       
-      ATP_private_endpoint_label:
+      autonomous_database_private_endpoint_label:
         type: string
         required: false
         visible: 
             and:
-              - ATP_private_endpoint
-        default: "ATPPrivateEndpoint"
-        title: "ATP Database Private Endpoint Label"
-        description: "Choose ATP Database Private Endpoint Label"
+              - autonomous_database_private_endpoint
+        default: "autonomous_database_private_endpoint"
+        title: "ADB Database Private Endpoint Label"
+        description: "Choose ADB Database Private Endpoint Label"
 
-      ATP_database_freeform_tags:
+      autonomous_database_freeform_tags:
         type: string
         required: false
         title: "ATP Database Freeform Tags"
         description: "Choose ATP Database Freeform Tags"
 
-      ATP_database_defined_tags_value:
+      autonomous_database_defined_tags_value:
         type: string
         required: false
         title: "ATP Database Defined Tags"

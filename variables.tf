@@ -22,7 +22,7 @@ variable "compartment_ocid" {
 #  default = ""
 #}
 variable "region" {}
-variable "ATP_password" {}
+variable "autonomous_database_admin_password" {}
 variable "availability_domain" {
   default = ""
 }
@@ -66,7 +66,7 @@ variable "instance_os" {
 
 variable "linux_os_version" {
   description = "Operating system version for all Linux instances"
-  default     = "7.9"
+  default     = "9.5"
 }
 
 variable "number_of_midtiers" {
@@ -82,66 +82,70 @@ variable "instance_flex_shape_ocpus" {
 }
 
 variable "instance_flex_shape_memory" {
-  default = 10
+  default = 16
 }
 
-variable "ATP_private_endpoint" {
+variable "autonomous_database_private_endpoint" {
   default = true
 }
 
-variable "ATP_database_cpu_core_count" {
+variable "autonomous_database_cpu_core_count" {
   default = 1
 }
 
-variable "ATP_database_data_storage_size_in_tbs" {
+variable "autonomous_database_data_storage_size_in_tbs" {
   default = 1
 }
 
-variable "ATP_database_db_name" {
-  default = "ORDSATP"
+variable "autonomous_database_db_name" {
+  default = "ORDSADB"
 }
 
-variable "ATP_database_db_version" {
-  default = "19c"
+variable "autonomous_database_db_version" {
+  default = "23ai"
 }
 
-variable "ATP_database_defined_tags_value" {
+variable "autonomous_database_defined_tags_value" {
   default = "value"
 }
 
-variable "ATP_database_display_name" {
-  default = "ORDSATP"
+variable "autonomous_database_display_name" {
+  default = "ORDSADB"
 }
 
-variable "ATP_database_freeform_tags" {
+variable "autonomous_database_freeform_tags" {
   default = {
-    "Owner" = "ATP"
+    "Owner" = "ADB"
   }
 }
 
-variable "ATP_database_license_model" {
+variable "autonomous_database_license_model" {
   default = "LICENSE_INCLUDED"
 }
 
-variable "ATP_tde_wallet_zip_file" {
-  default = "tde_wallet_ORDSATP.zip"
+variable "oci_database_autonomous_database_wallet" {
+  default = "Wallet_ORDSADB.zip"
 }
 
-variable "ATP_private_endpoint_label" {
-  default = "ATPPrivateEndpoint"
+variable "autonomous_database_private_endpoint_label" {
+  default = "autonomous_database_private_endpoint"
 }
 
-variable "ATP_data_guard_enabled" {
+variable "autonomous_database_is_data_guard_enabled" {
   default = false
 }
 
 locals {
-  # Dictionary Locals
+# Dictionary Locals
+# I've updated these to the latest shapes. These are the ones available with Linux 8 and 9. 
   compute_flexible_shapes = [
-    "VM.Standard.E3.Flex",
-    "VM.Standard.E4.Flex",
+    "VM.Standard.A2.Flex",
     "VM.Optimized3.Flex",
-    "VM.Standard.A1.Flex"
+    "VM.Standard.E4.Flex",
+    "VM.Standard.E3.Flex",
+    "VM.Standard3.Flex",
+    "VM.DenseIO.E4.Flex",
+    "VM.Standard.E5.Flex"
   ]
   # Checks if is using Flexible Compute Shapes
   is_flexible_node_shape = contains(local.compute_flexible_shapes, var.instance_shape)
