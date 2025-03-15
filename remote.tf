@@ -64,7 +64,7 @@ resource "null_resource" "compute-script1" {
       agent       = false
       timeout     = "2m"
     }
-    source      = var.ADB_wallet_zip_file
+    source      = var.oci_database_autonomous_database_wallet
 
 # This variable for the zip file is referencing the tde_wallet_ordsatp.zip file. So that is where it is
 # taking it from. See the variables.tf file for more details.
@@ -104,6 +104,8 @@ resource "null_resource" "compute-script1" {
       "sudo su - oracle -c 'sed -i 's/_NODE_NUMBER/${count.index}/g' /opt/oracle/ords/conf/ords/conf/databases/default/pool.xml'",
     # "sudo su - oracle -c 'java -jar /opt/oracle/ords/ords.war configdir /opt/oracle/ords/conf'",
       "sudo su - oracle -c 'sql -cloudconfig /home/oracle/wallet.zip admin/${var.autonomous_database_admin_password}@${var.autonomous_database_db_name}_low @/opt/oracle/ords/conf/ords/create_user.sql'",
+      "sudo echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile",
+      "source ~/.bashrc",
       "sudo su - oracle -c 'ords --config /opt/oracle/ords/conf serve'",
     ]
 
