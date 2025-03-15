@@ -227,3 +227,43 @@ Java HotSpot(TM) 64-Bit Server VM GraalVM EE 21.3.13 (build 17.0.14+8-LTS-jvmci-
 ```
 
 [3.2.3]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK). Its a pretty stable release. At some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. So, trying to get the JavaScript component to work with later versions of GraalVM is a huge pain in the ass. I've wasted a couple weeks' worth of my time trying to figure it out. Until that user experience is improved, I'm staying with the Java 17 JDK-based GraalVM version. Java `7 JDK works just fine for both SQLcl and ORDS. I'd also like to set ORDS up to use some of the MLE/Js and GraphQL functionality. And GraalVM is required for both.
+
+## 4. What do we know?
+
+Here are some observations at this point (in no particular order): 
+
+1. In the `/opt/oracle` directory, there are two sub-directories: `/ords` and `/sqlcl`.  
+
+    The `opt/oracle/ords` directory consists of the following directories and files:  
+
+    ```sh
+    .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
+    ```
+
+    While the `opt/oracle/sqlcl` directory consists of:
+
+    ```sh
+    .  ..  bin  lib  LICENSE.txt  NOTICES.txt  THIRD-PARTY-LICENSES.txt
+    ```
+
+2. However, the `/etc` directory *also* has an `ords` directory *and* an `ords.conf` file. This `ords` directory contains a `config` subfolder. You cannot `cd` into it, even with the `sudo` prefix. You cannot `cd` or `cat` the `ords.conf` "thing" either.
+
+    These are both located at: `/etc/ords` and `/etc/ords.conf`.
+
+3. What happens when I switch to the `oracle` user, with the `sudo su - oracle` command? And *then* try to peek into these?  
+
+    The `/opt/oracle/ords` is the same:
+
+    ```sh
+    .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
+    ```
+
+## To-do
+
+- [ ] Move through the *actual* ORDS installation. But test using the slient version of the `ords install adb`. It looks like there are [minimal requirements](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0).
+- [ ] Review the how the ords folders have changed after each step
+- [ ] Solving the `ords/bin` mystery; should you just go ahead and point to it as an environment variable (I think yes, and it probably couldnt hurt).
+- [ ] Should you just go ahead and specify the configuration folder as well? Or should you just keep it as this:
+`ords --config /etc/ords/config install adb`?
+- [ ] Should we `mv` the database wallet.zip file, so it is *always* accessible, each time?
+- [ ] How to automate the ords start-up/shut-down?
