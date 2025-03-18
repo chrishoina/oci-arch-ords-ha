@@ -200,6 +200,7 @@ It looks like Java isn't installed or configured. Is that correct? Issuing the `
 
 #### 3.2.3 GraalVM 21 Enterprise Edition (based on Java 17 JDK)[^3.2.3]
 
+Instructions on graalvm install in linux https://docs.oracle.com/en/learn/get-started-with-graalvm-on-oracle-linux/#task-2-install-graalvm-enterprise-oracle-linux
 There are two commands that I issued. One for GraalVM, the other for the JavaScript component:
 
 `sudo dnf install graalvm21-ee-17 -y`
@@ -217,6 +218,8 @@ The commands I issued, in order:
 3. `source ~/.bashrc`
 
     > :memo: **NOTE:** The command line didn't like when I issued the `sudo source ~/.bashcr` command.
+
+About source: https://ss64.com/bash/source.html
 
 *Now* if I issue the `java -version` command I will see:
 
@@ -700,6 +703,39 @@ Either `cd ..` and `cd ..` again or simply `cd /etc/ords/config` so you are at t
 </properties>
 ```
 
+Review the ORDS install logs:
+
+```sh
+[oracle@testinstance01 ~]$ cd logs
+[oracle@testinstance01 logs]$ ls -a
+.  ..  ords_adb_2025-03-18_141224_07526.log
+```
+
+Then `cat ords_adb_2025-03-18_141224_07526.log`, you'll see the following:
+
+```sh
+[oracle@testinstance01 logs]$ cat ords_adb_2025-03-18_141224_07526.log
+------------------------------------------------------------
+Date       : 18 Mar 2025 14:12:24
+Release    : Oracle REST Data Services 24.4.0.r3451601
+
+Database   : Oracle Database 23ai Enterprise Edition  
+DB Version : 23.7.0.25.03
+------------------------------------------------------------
+Container Name: BQJ5JPF7PVXPPQ5_TEMPADB
+------------------------------------------------------------
+
+[*** script: ords_runtime_user.sql] 
+
+PL/SQL procedure successfully completed.
+
+[*** script: ords_gateway_user.sql] 
+
+PL/SQL procedure successfully completed.
+
+[*** Info: Completed configuring for Customer Managed Oracle REST Data Services version 24.4.0.r3451601. Elapsed time: 00:00:03.553]
+```
+
 Just to be safe, and so we are all on the same page, navigate back to the `/home/oracle` directory. Issue the `pwd` command to view your current directory. Then issue the `ls -a` command to review the files in this directory (nothing will have changed, ths)
 
 ```sh
@@ -710,6 +746,683 @@ Just to be safe, and so we are all on the same page, navigate back to the `/home
 [oracle@testinstance01 ~]$ 
 ```
 
+[oracle@testinstance01 bin]$ pwd
+/opt/oracle/ords/bin
 
 
-ords --config /etc/ords/config serve
+`echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile`
+`source ~/.bash_profile`
+`ords --config /etc/ords/config serve`
+
+
+We used `./bashrc` when setting Java. But we use `./bash_profile` when setting the ORDS `/bin`, so what is it? What is preferred or more correct; `./bashrc` or `./bash_profile`? Details https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30
+
+[opc@testinstance01 ~]$ echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile
+[opc@testinstance01 ~]$ source ~/.bash_profile
+[opc@testinstance01 ~]$ env
+SHELL=/bin/bash
+HISTCONTROL=ignoredups
+HISTSIZE=1000
+HOSTNAME=testinstance01
+JAVA_HOME=/usr/lib64/graalvm/graalvm21-ee-17
+PWD=/home/opc
+LOGNAME=opc
+XDG_SESSION_TYPE=tty
+MODULESHOME=/usr/share/Modules
+MANPATH=/usr/share/man:
+MOTD_SHOWN=pam
+__MODULES_SHARE_MANPATH=:1
+HOME=/home/opc
+LANG=en_US.UTF-8
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;37;41:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.m4a=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.oga=01;36:*.opus=01;36:*.spx=01;36:*.xspf=01;36:
+SSH_CONNECTION=136.56.69.68 52993 10.0.0.153 22
+SSH_CONNECTION=136.56.69.68 52993 10.0.0.153 22
+XDG_SESSION_CLASS=user
+SELINUX_ROLE_REQUESTED=
+TERM=xterm-256color
+LESSOPEN=||/usr/bin/lesspipe.sh %s
+USER=opc
+MODULES_RUN_QUARANTINE=LD_LIBRARY_PATH LD_PRELOAD
+LOADEDMODULES=
+SELINUX_USE_CURRENT_RANGE=
+SHLVL=1
+XDG_SESSION_ID=889
+XDG_RUNTIME_DIR=/run/user/1000
+SSH_CLIENT=136.56.69.68 52993 22
+__MODULES_LMINIT=module use --append /usr/share/Modules/modulefiles:module use --append /etc/modulefiles:module use --append /usr/share/modulefiles
+which_declare=declare -f
+PATH=/usr/lib64/graalvm/graalvm21-ee-17/bin:/usr/lib64/graalvm/graalvm21-ee-17/bin:/home/opc/.local/bin:/home/opc/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/oracle/ords/bin
+SELINUX_LEVEL_REQUESTED=
+MODULEPATH=/etc/scl/modulefiles:/usr/share/Modules/modulefiles:/etc/modulefiles:/usr/share/modulefiles
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+MAIL=/var/spool/mail/opc
+SSH_TTY=/dev/pts/0
+MODULES_CMD=/usr/share/Modules/libexec/modulecmd.tcl
+BASH_FUNC_ml%%=() {  module ml "$@"
+}
+BASH_FUNC_which%%=() {  ( alias;
+ eval ${which_declare} ) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
+}
+BASH_FUNC_module%%=() {  local _mlredir=1;
+ if [ -n "${MODULES_REDIRECT_OUTPUT+x}" ]; then
+ if [ "$MODULES_REDIRECT_OUTPUT" = '0' ]; then
+ _mlredir=0;
+ else
+ if [ "$MODULES_REDIRECT_OUTPUT" = '1' ]; then
+ _mlredir=1;
+ fi;
+ fi;
+ fi;
+ case " $@ " in 
+ *' --no-redirect '*)
+ _mlredir=0
+ ;;
+ *' --redirect '*)
+ _mlredir=1
+ ;;
+ esac;
+ if [ $_mlredir -eq 0 ]; then
+ _module_raw "$@";
+ else
+ _module_raw "$@" 2>&1;
+ fi
+}
+BASH_FUNC_scl%%=() {  if [ "$1" = "load" -o "$1" = "unload" ]; then
+ eval "module $@";
+ else
+ /usr/bin/scl "$@";
+ fi
+}
+BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec/modulecmd.tcl' bash "$@")";
+ _mlstatus=$?;
+ return $_mlstatus
+}
+
+[opc@testinstance01 ~]$ sudo su - oracle
+Last login: Tue Mar 18 14:55:24 GMT 2025 on pts/0
+[oracle@testinstance01 ~]$ env
+SHELL=/bin/bash
+HISTCONTROL=ignoredups
+HISTSIZE=1000
+HOSTNAME=testinstance01
+PWD=/home/oracle
+LOGNAME=oracle
+MODULESHOME=/usr/share/Modules
+MANPATH=/usr/share/man:
+__MODULES_SHARE_MANPATH=:1
+HOME=/home/oracle
+LANG=en_US.UTF-8
+LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;37;41:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.m4a=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.oga=01;36:*.opus=01;36:*.spx=01;36:*.xspf=01;36:
+TERM=xterm-256color
+LESSOPEN=||/usr/bin/lesspipe.sh %s
+USER=oracle
+MODULES_RUN_QUARANTINE=LD_LIBRARY_PATH LD_PRELOAD
+LOADEDMODULES=
+SHLVL=1
+__MODULES_LMINIT=module use --append /usr/share/Modules/modulefiles:module use --append /etc/modulefiles:module use --append /usr/share/modulefiles
+which_declare=declare -f
+PATH=/home/oracle/.local/bin:/home/oracle/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+MODULEPATH=/etc/scl/modulefiles:/usr/share/Modules/modulefiles:/etc/modulefiles:/usr/share/modulefiles
+MAIL=/var/spool/mail/oracle
+MODULES_CMD=/usr/share/Modules/libexec/modulecmd.tcl
+BASH_FUNC_ml%%=() {  module ml "$@"
+}
+BASH_FUNC_which%%=() {  ( alias;
+ eval ${which_declare} ) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
+}
+BASH_FUNC_module%%=() {  local _mlredir=1;
+ if [ -n "${MODULES_REDIRECT_OUTPUT+x}" ]; then
+ if [ "$MODULES_REDIRECT_OUTPUT" = '0' ]; then
+ _mlredir=0;
+ else
+ if [ "$MODULES_REDIRECT_OUTPUT" = '1' ]; then
+ _mlredir=1;
+ fi;
+ fi;
+ fi;
+ case " $@ " in 
+ *' --no-redirect '*)
+ _mlredir=0
+ ;;
+ *' --redirect '*)
+ _mlredir=1
+ ;;
+ esac;
+ if [ $_mlredir -eq 0 ]; then
+ _module_raw "$@";
+ else
+ _module_raw "$@" 2>&1;
+ fi
+}
+BASH_FUNC_scl%%=() {  if [ "$1" = "load" -o "$1" = "unload" ]; then
+ eval "module $@";
+ else
+ /usr/bin/scl "$@";
+ fi
+}
+BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec/modulecmd.tcl' bash "$@")";
+ _mlstatus=$?;
+ return $_mlstatus
+}
+_=/usr/bin/env
+
+Should you as oracle or opc? 
+
+Even though you set the ords/bin path as the opc user, everything still seems to work even if you issue the `ords --config /etc/ords/config serve` as the oracle user.
+
+```sh
+[oracle@testinstance01 ~]$ ords --config /etc/ords/config serve
+```
+
+And output you'll see:
+
+```sh
+ORDS: Release 24.4 Production on Tue Mar 18 14:59:48 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+2025-03-18T14:59:48.756Z INFO        HTTP and HTTP/2 cleartext listening on host: 0.0.0.0 port: 8080
+2025-03-18T14:59:48.786Z INFO        Disabling document root because the specified folder does not exist: /etc/ords/config/global/doc_root
+2025-03-18T14:59:48.787Z INFO        Default forwarding from / to contextRoot configured.
+2025-03-18T14:59:52.723Z INFO        Configuration properties for: |default|lo|
+java.specification.version=17
+conf.use.wallet=true
+sun.jnu.encoding=UTF-8
+user.region=US
+java.class.path=/opt/oracle/ords/ords.war
+java.vm.vendor=Oracle Corporation
+sun.arch.data.model=64
+nashorn.args=--no-deprecation-warning
+java.vendor.url=https://java.oracle.com/
+resource.templates.enabled=false
+user.timezone=UTC
+java.vm.specification.version=17
+os.name=Linux
+sun.java.launcher=SUN_STANDARD
+user.country=US
+sun.boot.library.path=/usr/lib64/graalvm/graalvm21-ee-java17/lib
+sun.java.command=/opt/oracle/ords/ords.war --config /etc/ords/config serve
+jdk.debug=release
+sun.cpu.endian=little
+user.home=/home/oracle
+oracle.dbtools.launcher.executable.jar.path=/opt/oracle/ords/ords.war
+user.language=en
+sun.stderr.encoding=UTF-8
+java.specification.vendor=Oracle Corporation
+java.version.date=2025-01-21
+java.home=/usr/lib64/graalvm/graalvm21-ee-java17
+db.username=ORDS_PUBLIC_USER_COMPUTE_01
+file.separator=/
+java.vm.compressedOopsMode=Zero based
+jdk.internal.vm.ci.enabled=true
+line.separator=
+
+sun.stdout.encoding=UTF-8
+java.specification.name=Java Platform API Specification
+java.vm.specification.vendor=Oracle Corporation
+java.awt.headless=true
+db.password=******
+sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+security.requestValidationFunction=ords_util.authorize_plsql_gateway
+db.wallet.zip.service=TEMPADB_LOW
+java.runtime.version=17.0.14+8-LTS-jvmci-21.3-b98
+user.name=oracle
+path.separator=:
+os.version=5.15.0-305.176.4.el9uek.x86_64
+java.runtime.name=Java(TM) SE Runtime Environment
+file.encoding=UTF-8
+plsql.gateway.mode=proxied
+db.wallet.zip.path=/home/oracle/Wallet_tempadb.zip
+java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+java.vendor.version=GraalVM EE 21.3.13
+java.vendor.url.bug=https://bugreport.java.com/bugreport/
+java.io.tmpdir=/tmp
+oracle.dbtools.cmdline.ShellCommand=ords
+java.version=17.0.14
+user.dir=/home/oracle
+os.arch=amd64
+java.vm.specification.name=Java Virtual Machine Specification
+oracle.dbtools.cmdline.home=/opt/oracle/ords
+native.encoding=UTF-8
+java.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib
+java.vendor=Oracle Corporation
+java.vm.info=mixed mode, sharing
+java.vm.version=17.0.14+8-LTS-jvmci-21.3-b98
+java.specification.maintenance.version=1
+sun.io.unicode.encoding=UnicodeLittle
+java.class.version=61.0
+
+2025-03-18T14:59:52.806Z WARNING     *** jdbc.MaxLimit in configuration |default|lo| is using a value of 10, this setting may not be sized adequately for a production environment ***
+2025-03-18T14:59:53.294Z INFO        
+
+Mapped local pools from /etc/ords/config/databases:
+  /ords/                              => default                        => VALID     
+
+
+2025-03-18T14:59:53.380Z INFO        Oracle REST Data Services initialized
+Oracle REST Data Services version : 24.4.0.r3451601
+Oracle REST Data Services server info: jetty/12.0.13
+Oracle REST Data Services java info: Java HotSpot(TM) 64-Bit Server VM GraalVM EE 21.3.13 (build: 17.0.14+8-LTS-jvmci-21.3-b98 mixed mode, sharing)
+```
+
+Kill the process and review logs 
+How do I navigate to the landing page for this compute instance? 
+
+[oracle@testinstance01 /]$ cd etc/ords/config
+[oracle@testinstance01 config]$ ls -a
+.  ..  databases  global
+[oracle@testinstance01 config]$ 
+
+```sh
+[oracle@testinstance01 config]$ ords config --help
+2025-03-18T15:29:57Z INFO   ORDS has not detected the option '--config' and this will be set up to the default directory.
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:29:59 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+
+Usage:
+  ords config [OPTIONS] [COMMAND]
+
+Configure application and database connection pool settings
+
+Options:
+        --db-pool <string>       The name of the database connection pool to
+                                 configure
+
+    -h, --help                   Show usage information for the command
+
+        --quiet                  Hides the banner, copyright and configuration
+                                 location information.
+
+Commands:
+        delete                   Remove the specified configuration setting
+
+        get                      Show the value of the specified configuration
+                                 setting. Sensitive values will be replaced
+                                 with: ******
+
+        info                     Describe the specified configuration setting
+
+        list                     List all explicitly configured pool and global
+                                 settings
+
+        secret                   Securely store a sensitive configuration
+                                 setting such as: db.password
+
+        set                      Set the configuration setting to the specified
+                                 value. Sensitive values cannot be set using
+                                 this method, use the secret command instead
+
+        user                     Create or update a user and its password and
+                                 roles. Display the user information.
+```
+
+```sh
+[oracle@testinstance01 config]$ ords config list --include-defaults
+2025-03-18T15:35:18Z INFO   ORDS has not detected the option '--config' and this will be set up to the default directory.
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:35:20 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+Database pool: default
+INFO: The configuration does not have any global settings specified.
+
+Setting                                     Value                                   Source     
+-----------------------------------------   -------------------------------------   -----------
+apex.security.administrator.roles           SQL Developer, OAuth Client Developer   Default    
+apex.security.developer.roles               SQL Developer, OAuth Client Developer   Default    
+apex.security.user.roles                                                            Default    
+cache.metadata.enabled                      true                                    Default    
+cache.metadata.graphql.expireAfterAccess    1m                                      Default    
+cache.metadata.graphql.expireAfterWrite     2m                                      Default    
+cache.metadata.timeout                      5s                                      Default    
+database.api.enabled                        false                                   Default    
+database.api.management.services.disabled   false                                   Default    
+db.adminUser                                                                        Default    
+db.adminUser.password                                                               Default    
+db.cdb.adminUser                                                                    Default    
+db.cdb.adminUser.password                                                           Default    
+db.connectionType                                                                   Default    
+db.credentialsSource                        POOL                                    Default    
+db.customURL                                                                        Default    
+db.hostname                                                                         Default    
+db.idlePoolTimeout                                                                  Default    
+db.invalidPoolTimeout                       15m                                     Default    
+db.password                                 ******                                  Pool Wallet
+db.poolDestroyTimeout                       5m                                      Default    
+db.port                                     1521                                    Default    
+db.serviceNameSuffix                                                                Default    
+db.servicename                                                                      Default    
+db.sid                                                                              Default    
+db.tnsAliasName                                                                     Default    
+db.tnsDirectory                                                                     Default    
+db.username                                 ORDS_PUBLIC_USER_COMPUTE_01             Pool       
+db.wallet.cache                             /tmp/ords-wallet-cache                  Default    
+db.wallet.zip                                                                       Default    
+db.wallet.zip.path                          /home/oracle/Wallet_tempadb.zip         Pool       
+db.wallet.zip.service                       TEMPADB_LOW                             Pool       
+debug.printDebugToScreen                    false                                   Default    
+debug.trackResources                        false                                   Default    
+error.externalPath                                                                  Default    
+error.responseFormat                        AUTO                                    Default    
+feature.grahpql.max.nesting.depth           5                                       Default    
+feature.graphql                             ENABLED                                 Default    
+feature.openservicebroker.exclude           false                                   Default    
+feature.predispatchTasks                    false                                   Default    
+feature.sdw                                 false                                   Default    
+feature.sdw.selfServiceSchema               false                                   Default    
+feature.serviceconsole                      false                                   Default    
+http.cookie.filter                                                                  Default    
+http.cookie.filter.byValue                                                          Default    
+icap.port                                                                           Default    
+icap.secure.port                                                                    Default    
+icap.server                                                                         Default    
+instance.api.enabled                        false                                   Default    
+jdbc.ConnectionWaitTimeout                  3                                       Default    
+jdbc.DriverType                             thin                                    Default    
+jdbc.InactivityTimeout                      1800                                    Default    
+jdbc.InitialLimit                           0                                       Default    
+jdbc.MaxConnectionReuseCount                1000                                    Default    
+jdbc.MaxLimit                               10                                      Default    
+jdbc.MaxStatementsLimit                     10                                      Default    
+jdbc.MinLimit                               2                                       Default    
+jdbc.auth.admin.role                                                                Default    
+jdbc.auth.enabled                           false                                   Default    
+jdbc.cleanup.mode                           RECYCLE                                 Default    
+jdbc.driverName                                                                     Default    
+jdbc.statementTimeout                       900s                                    Default    
+jdbc.ucp.enableJMX                          true                                    Default    
+json.sdo.geometry.output.geojson            false                                   Default    
+misc.defaultPage                            apex                                    Default    
+misc.pagination.maxRows                     10000                                   Default    
+mongo.access.log                                                                    Default    
+mongo.enabled                               false                                   Default    
+mongo.host                                  0.0.0.0                                 Default    
+mongo.idle.timeout                          30m                                     Default    
+mongo.op.timeout                            10m                                     Default    
+mongo.port                                  27017                                   Default    
+mongo.tls                                   true                                    Default    
+ocid.dbtools.connection                                                             Default    
+oracle.jdbc.vectorDefaultGetObjectType      String                                  Default    
+owa.docTable                                                                        Default    
+owa.trace.sql                               false                                   Default    
+plsql.gateway.mode                          proxied                                 Pool       
+procedure.postProcess                                                               Default    
+procedure.preProcess                                                                Default    
+procedure.rest.preHook                                                              Default    
+public.properties.url                                                               Default    
+request.traceHeaderName                     Request-Id                              Default    
+resource.templates.enabled                  false                                   Default    
+restEnabledSql.active                       false                                   Default    
+restXMLModules.active                       true                                    Default    
+security.credentials.attempts               -1                                      Default    
+security.credentials.file                                                           Default    
+security.credentials.lock.time              10m                                     Default    
+security.disableDefaultExclusionList        false                                   Default    
+security.exclusionList                                                              Default    
+security.externalSessionTrustedOrigins                                              Default    
+security.httpsHeaderCheck                                                           Default    
+security.inclusionList                                                              Default    
+security.jwks.connection.timeout            5s                                      Default    
+security.jwks.read.timeout                  5s                                      Default    
+security.jwks.refresh.interval              10s                                     Default    
+security.jwks.size                          100000                                  Default    
+security.jwt.allowed.age                    -1s                                     Default    
+security.jwt.allowed.skew                   0s                                      Default    
+security.jwt.authenticators                 DATABASE                                Default    
+security.jwt.profile.enabled                true                                    Default    
+security.maxEntries                         2000                                    Default    
+security.par.enabled                        true                                    Default    
+security.requestAuthenticationFunction                                              Default    
+security.requestValidationFunction          ords_util.authorize_plsql_gateway       Pool       
+security.validationFunctionType             plsql                                   Default    
+security.verifySSL                          true                                    Default    
+standalone.access.log                                                               Default    
+standalone.access.log.retainDays            90                                      Default    
+standalone.binds                            0.0.0.0                                 Default    
+standalone.context.path                     /ords                                   Default    
+standalone.doc.root                         ${config.url}/global/doc_root           Default    
+standalone.http.port                        8080                                    Default    
+standalone.https.cert                                                               Default    
+standalone.https.cert.key                                                           Default    
+standalone.https.host                                                               Default    
+standalone.https.port                       8443                                    Default    
+standalone.static.context.path              /i                                      Default    
+standalone.static.path                                                              Default    
+standalone.stop.timeout                     10s                                     Default    
+```
+
+```sh
+[oracle@testinstance01 config]$ ords --config /etc/ords/config config set feature.sdw true
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:37:51 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+The setting named: feature.sdw was set to: true in configuration: default
+```
+
+```sh
+[oracle@testinstance01 config]$ ords --config /etc/ords/config config list --include-defaults
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:38:23 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+Database pool: default
+INFO: The configuration does not have any global settings specified.
+
+Setting                                     Value                                   Source     
+-----------------------------------------   -------------------------------------   -----------
+apex.security.administrator.roles           SQL Developer, OAuth Client Developer   Default    
+apex.security.developer.roles               SQL Developer, OAuth Client Developer   Default    
+apex.security.user.roles                                                            Default    
+cache.metadata.enabled                      true                                    Default    
+cache.metadata.graphql.expireAfterAccess    1m                                      Default    
+cache.metadata.graphql.expireAfterWrite     2m                                      Default    
+cache.metadata.timeout                      5s                                      Default    
+database.api.enabled                        false                                   Default    
+database.api.management.services.disabled   false                                   Default    
+db.adminUser                                                                        Default    
+db.adminUser.password                                                               Default    
+db.cdb.adminUser                                                                    Default    
+db.cdb.adminUser.password                                                           Default    
+db.connectionType                                                                   Default    
+db.credentialsSource                        POOL                                    Default    
+db.customURL                                                                        Default    
+db.hostname                                                                         Default    
+db.idlePoolTimeout                                                                  Default    
+db.invalidPoolTimeout                       15m                                     Default    
+db.password                                 ******                                  Pool Wallet
+db.poolDestroyTimeout                       5m                                      Default    
+db.port                                     1521                                    Default    
+db.serviceNameSuffix                                                                Default    
+db.servicename                                                                      Default    
+db.sid                                                                              Default    
+db.tnsAliasName                                                                     Default    
+db.tnsDirectory                                                                     Default    
+db.username                                 ORDS_PUBLIC_USER_COMPUTE_01             Pool       
+db.wallet.cache                             /tmp/ords-wallet-cache                  Default    
+db.wallet.zip                                                                       Default    
+db.wallet.zip.path                          /home/oracle/Wallet_tempadb.zip         Pool       
+db.wallet.zip.service                       TEMPADB_LOW                             Pool       
+debug.printDebugToScreen                    false                                   Default    
+debug.trackResources                        false                                   Default    
+error.externalPath                                                                  Default    
+error.responseFormat                        AUTO                                    Default    
+feature.grahpql.max.nesting.depth           5                                       Default    
+feature.graphql                             ENABLED                                 Default    
+feature.openservicebroker.exclude           false                                   Default    
+feature.predispatchTasks                    false                                   Default    
+feature.sdw                                 true                                    Pool       
+feature.sdw.selfServiceSchema               false                                   Default    
+feature.serviceconsole                      false                                   Default    
+http.cookie.filter                                                                  Default    
+http.cookie.filter.byValue                                                          Default    
+icap.port                                                                           Default    
+icap.secure.port                                                                    Default    
+icap.server                                                                         Default    
+instance.api.enabled                        false                                   Default    
+jdbc.ConnectionWaitTimeout                  3                                       Default    
+jdbc.DriverType                             thin                                    Default    
+jdbc.InactivityTimeout                      1800                                    Default    
+jdbc.InitialLimit                           0                                       Default    
+jdbc.MaxConnectionReuseCount                1000                                    Default    
+jdbc.MaxLimit                               10                                      Default    
+jdbc.MaxStatementsLimit                     10                                      Default    
+jdbc.MinLimit                               2                                       Default    
+jdbc.auth.admin.role                                                                Default    
+jdbc.auth.enabled                           false                                   Default    
+jdbc.cleanup.mode                           RECYCLE                                 Default    
+jdbc.driverName                                                                     Default    
+jdbc.statementTimeout                       900s                                    Default    
+jdbc.ucp.enableJMX                          true                                    Default    
+json.sdo.geometry.output.geojson            false                                   Default    
+misc.defaultPage                            apex                                    Default    
+misc.pagination.maxRows                     10000                                   Default    
+mongo.access.log                                                                    Default    
+mongo.enabled                               false                                   Default    
+mongo.host                                  0.0.0.0                                 Default    
+mongo.idle.timeout                          30m                                     Default    
+mongo.op.timeout                            10m                                     Default    
+mongo.port                                  27017                                   Default    
+mongo.tls                                   true                                    Default    
+ocid.dbtools.connection                                                             Default    
+oracle.jdbc.vectorDefaultGetObjectType      String                                  Default    
+owa.docTable                                                                        Default    
+owa.trace.sql                               false                                   Default    
+plsql.gateway.mode                          proxied                                 Pool       
+procedure.postProcess                                                               Default    
+procedure.preProcess                                                                Default    
+procedure.rest.preHook                                                              Default    
+public.properties.url                                                               Default    
+request.traceHeaderName                     Request-Id                              Default    
+resource.templates.enabled                  false                                   Default    
+restEnabledSql.active                       false                                   Default    
+restXMLModules.active                       true                                    Default    
+security.credentials.attempts               -1                                      Default    
+security.credentials.file                                                           Default    
+security.credentials.lock.time              10m                                     Default    
+security.disableDefaultExclusionList        false                                   Default    
+security.exclusionList                                                              Default    
+security.externalSessionTrustedOrigins                                              Default    
+security.httpsHeaderCheck                                                           Default    
+security.inclusionList                                                              Default    
+security.jwks.connection.timeout            5s                                      Default    
+security.jwks.read.timeout                  5s                                      Default    
+security.jwks.refresh.interval              10s                                     Default    
+security.jwks.size                          100000                                  Default    
+security.jwt.allowed.age                    -1s                                     Default    
+security.jwt.allowed.skew                   0s                                      Default    
+security.jwt.authenticators                 DATABASE                                Default    
+security.jwt.profile.enabled                true                                    Default    
+security.maxEntries                         2000                                    Default    
+security.par.enabled                        true                                    Default    
+security.requestAuthenticationFunction                                              Default    
+security.requestValidationFunction          ords_util.authorize_plsql_gateway       Pool       
+security.validationFunctionType             plsql                                   Default    
+security.verifySSL                          true                                    Default    
+standalone.access.log                                                               Default    
+standalone.access.log.retainDays            90                                      Default    
+standalone.binds                            0.0.0.0                                 Default    
+standalone.context.path                     /ords                                   Default    
+standalone.doc.root                         ${config.url}/global/doc_root           Default    
+standalone.http.port                        8080                                    Default    
+standalone.https.cert                                                               Default    
+standalone.https.cert.key                                                           Default    
+standalone.https.host                                                               Default    
+standalone.https.port                       8443                                    Default    
+standalone.static.context.path              /i                                      Default    
+standalone.static.path                                                              Default    
+standalone.stop.timeout                     10s                                     Default
+```
+
+```sh
+[oracle@testinstance01 databases]$ cd default
+[oracle@testinstance01 default]$ ls -a
+.  ..  pool.xml  wallet
+[oracle@testinstance01 default]$ cat pool.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Mar 18 15:37:52 UTC 2025</comment>
+<entry key="db.username">ORDS_PUBLIC_USER_COMPUTE_01</entry>
+<entry key="db.wallet.zip.path">/home/oracle/Wallet_tempadb.zip</entry>
+<entry key="db.wallet.zip.service">TEMPADB_LOW</entry>
+<entry key="feature.sdw">true</entry>
+<entry key="plsql.gateway.mode">proxied</entry>
+<entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
+</properties>
+```
+
+```sh
+[oracle@testinstance01 global]$ ords --config /etc/ords/config config set database.api.enabled true
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:53:04 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+The global setting named: database.api.enabled was set to: true
+[oracle@testinstance01 global]$ ords --config /etc/ords/config config set restEnabledSql.active true
+
+ORDS: Release 24.4 Production on Tue Mar 18 15:53:13 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+The setting named: restEnabledSql.active was set to: true in configuration: default
+```
+
+```sh
+[oracle@testinstance01 global]$ cat settings.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Mar 18 15:53:04 UTC 2025</comment>
+<entry key="database.api.enabled">true</entry>
+</properties>
+```
+
+```sh
+[oracle@testinstance01 default]$ cat pool.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Mar 18 15:53:13 UTC 2025</comment>
+<entry key="db.username">ORDS_PUBLIC_USER_COMPUTE_01</entry>
+<entry key="db.wallet.zip.path">/home/oracle/Wallet_tempadb.zip</entry>
+<entry key="db.wallet.zip.service">TEMPADB_LOW</entry>
+<entry key="feature.sdw">true</entry>
+<entry key="plsql.gateway.mode">proxied</entry>
+<entry key="restEnabledSql.active">true</entry>
+<entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
+</properties>
+```
+
+*If you do not include the `--feature-sdw <BOOLEAN>` and then you change your mind later. It isn't enough to just issue the `ords config set feature.sdw true` command. Because, your `database.api.enabled` and `restEnabledSql.active` are not set at this time, so you still have to configure them manually. 
+
+I believe for a High-availability set-up, you don't need access to Database Actions. Since this set up is probably more geared toward/for REST APIs only. 
+
