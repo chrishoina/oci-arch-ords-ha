@@ -646,9 +646,11 @@ The setting named: security.requestValidationFunction was set to: ords_util.auth
 
 Review results and artifacts 
 
+```sh
 2025-03-18T14:12:27.885Z INFO        Log file written to /home/oracle/logs/ords_adb_2025-03-18_141224_07526.log
 2025-03-18T14:12:27.890Z INFO        To run in standalone mode, use the ords serve command:
 2025-03-18T14:12:27.891Z INFO        ords --config /etc/ords/config serve
+```
 
 You can see the new user schemas in your database, from the SQL Worksheet Navigator. 
 
@@ -662,13 +664,19 @@ You can `cd` straight to the `/etc/ords/config` with the `cd /etc/ords/config` c
 ```
 
 cd databases
+
+```sh
 [oracle@testinstance01 databases]$ ls -a
 .  ..  default
+```
 
+```sh
 [oracle@testinstance01 databases]$ cd default
 [oracle@testinstance01 default]$ ls -a
 .  ..  pool.xml  wallet
+```
 
+```sh
 [oracle@testinstance01 default]$ cat pool.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -680,6 +688,7 @@ cd databases
 <entry key="plsql.gateway.mode">proxied</entry>
 <entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
 </properties>
+```
 
 Either `cd ..` and `cd ..` again or simply `cd /etc/ords/config` so you are at the level where both `databases` and `global` folders are visisble:
 
@@ -757,6 +766,7 @@ Just to be safe, and so we are all on the same page, navigate back to the `/home
 
 We used `./bashrc` when setting Java. But we use `./bash_profile` when setting the ORDS `/bin`, so what is it? What is preferred or more correct; `./bashrc` or `./bash_profile`? Details https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30
 
+```sh
 [opc@testinstance01 ~]$ echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile
 [opc@testinstance01 ~]$ source ~/.bash_profile
 [opc@testinstance01 ~]$ env
@@ -837,7 +847,9 @@ BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec
  _mlstatus=$?;
  return $_mlstatus
 }
+```
 
+```sh
 [opc@testinstance01 ~]$ sudo su - oracle
 Last login: Tue Mar 18 14:55:24 GMT 2025 on pts/0
 [oracle@testinstance01 ~]$ env
@@ -905,6 +917,7 @@ BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec
  return $_mlstatus
 }
 _=/usr/bin/env
+```
 
 Should you as oracle or opc? 
 
@@ -1067,6 +1080,9 @@ Commands:
 
 ```sh
 [oracle@testinstance01 config]$ ords config list --include-defaults
+```
+
+```sh
 2025-03-18T15:35:18Z INFO   ORDS has not detected the option '--config' and this will be set up to the default directory.
 
 ORDS: Release 24.4 Production on Tue Mar 18 15:35:20 2025
