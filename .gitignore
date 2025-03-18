@@ -1,0 +1,4 @@
+Password123456
+
+scp -i ssh-key-2025-03-15.key /Users/choina/Downloads/Wallet_tempadb.zip opc@132.226.202.219:/home/opc
+passwords.txt

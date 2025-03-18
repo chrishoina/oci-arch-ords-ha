@@ -228,7 +228,7 @@ Java HotSpot(TM) 64-Bit Server VM GraalVM EE 21.3.13 (build 17.0.14+8-LTS-jvmci-
 
 [3.2.3]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK). Its a pretty stable release. At some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. So, trying to get the JavaScript component to work with later versions of GraalVM is a huge pain in the ass. I've wasted a couple weeks' worth of my time trying to figure it out. Until that user experience is improved, I'm staying with the Java 17 JDK-based GraalVM version. Java `7 JDK works just fine for both SQLcl and ORDS. I'd also like to set ORDS up to use some of the MLE/Js and GraphQL functionality. And GraalVM is required for both.
 
-## 4. What do we know?
+## 3.2.4 What do we know?
 
 Here are some observations at this point (in no particular order): 
 
@@ -258,7 +258,7 @@ Here are some observations at this point (in no particular order):
     .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
     ```
 
-## To-do
+## 2.3.5 To-do
 
 - [ ] Move through the *actual* ORDS installation. But test using the slient version of the `ords install adb`. It looks like there are [minimal requirements](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0).
 - [ ] Review the how the ords folders have changed after each step
@@ -267,3 +267,449 @@ Here are some observations at this point (in no particular order):
 `ords --config /etc/ords/config install adb`?
 - [ ] Should we `mv` the database wallet.zip file, so it is *always* accessible, each time?
 - [ ] How to automate the ords start-up/shut-down?
+
+## 4. Performing the ORDS install
+
+### 4.1 Setup
+
+What you need for an ORDS ADB install: [Slient Install in ADB](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0):
+
+- Database Pool: If this option is omitted, then the default database pool is used.
+- Wallet Path: This is required if this option does not exist in the ORDS configuration database pool.
+- Wallet Service Name: The TNS alias name from tnsnames.ora file contained in the wallet zip file. If this option is omitted, and the setting db.wallet.zip.service does not exist in the ORDS configuration database pool, then the wallet service name defaults to `[Your database "short name"]_LOW`.
+- Administrator username and password (Required)
+- Runtime database username and password (Required)
+- PL/SQL gateway username and password (Required)
+- Additional Database Features (What does this mean??)
+
+#### 4.1.1 Install steps
+
+1. Securely copy your database wallet from OCI, into your compute instance. You can do this with the following command:
+
+```sh
+scp -i [Your compute instance's private key] /the/locally/saved/path/to/your/wallet/Wallet_[your ADB "short name"].zip opc@[your compute instance's IP address]:/home/opc
+```
+
+About the Cloud Wallet, what is in it? https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
+
+Switch to the `oracle` user. With the `sudo su - oracle` command.
+
+tempadb
+see gitignore*
+TNS names are one of:
+
+- `tempadb_high`
+- `tempadb_low`
+- `tempadb_medium`
+
+For simplicity, the database admin and wallet passwords are the same.
+Just need to move this from your downloads to your compute instance
+
+Terraform has [a resource](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/database_autonomous_database_wallet) for doing this "locally". It looks like you the contents are derived from the var.tf file. That "stuff" all comes from the schema.yaml file.
+
+> :exclamation: **NOTE:** Something to figure out when doing with terraform.
+
+```sh
+.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh  Wallet_tempadb.zip
+```
+
+In directory: `/home/opc/Wallet_tempadb.zip`
+
+[Something to remember](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). Does the `oracle:oinstall` command need to be used? I think I'm going to do this, since for the install the `Oracle` user is the one completing the ORDS install.
+
+- Database Pool: If this option is omitted, then the default database pool is used.
+- Wallet Path: This is required if this option does not exist in the ORDS configuration database pool.
+- Wallet Service Name: The TNS alias name from tnsnames.ora file contained in the wallet zip file. If this option is omitted, and the setting db.wallet.zip.service does not exist in the ORDS configuration database pool, then the wallet service name defaults to <DB>_LOW.
+- Administrator username and password (Required)
+- Runtime database username and password (Required)
+- PL/SQL gateway username and password (Required)
+- Additional Database Features (What does this mean??)
+
+At this point, or even sooner, we'd probably need to open up the ports for the compute instance, since ORDS will be running on either port 8080 (HTTP) or 8443 (HTTPS).
+
+sudo firewall-cmd --permanent  --add-port=8080/tcp
+sudo firewall-cmd --permanent  --add-port=443/tcp
+sudo firewall-cmd --permanent  --add-port=80/tcp
+sudo firewall-cmd --reload
+
+https://firewalld.org/documentation/man-pages/firewall-cmd.html
+
+Issuing the `sudo firewall-cmd --list-all-zones`, and you'll see the following:
+
+```sh
+block
+  target: %%REJECT%%
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+dmz
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+drop
+  target: DROP
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+external
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: yes
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+home
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client mdns samba-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+internal
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client mdns samba-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+nm-shared
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: dhcp dns ssh
+  ports: 
+  protocols: icmp ipv6-icmp
+  forward: no
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+	rule priority="32767" reject
+
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: ens3
+  sources: 
+  services: dhcpv6-client ssh
+  ports: 8080/tcp 443/tcp 80/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+trusted
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+work
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+```
+
+It looks like everything I just did "took":
+
+```sh
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: ens3
+  sources: 
+  services: dhcpv6-client ssh
+  ports: 8080/tcp 443/tcp 80/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+```
+
+Ports 8080, 443, and 80 are available. I'm not sure if all or some are needed. Or if this is even correct.
+
+chown -R 
+
+Move the file from `/home/opc/Wallet_tempadb.zip` to `/home/oracle/Wallet_tempadb.zip`. And then change the ownership, like in [this example](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712).
+
+
+sudo mv /home/opc/Wallet_tempadb.zip /home/oracle/Wallet_tempadb.zip
+
+Issuing the `ls -a` you'll see the following: 
+
+```sh
+.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh
+```
+
+About the ls command: https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html#ls_003a-List-directory-contents
+
+The Wallet.zip file is gone.
+
+Switch to the Oracle user with `sudo su - oracle`, then issue the `ls -l` command, to view file ownership properties. You'll see this:
+
+```sh
+total 24
+-rw-r--r--. 1 opc opc 21975 Mar 17 20:55 Wallet_tempadb.zip
+```
+
+Great resource for what r, rw, r, etc means: https://www.redhat.com/en/blog/linux-file-permissions-explained
+
+You'll see how the owner and owner group are still `opc`, you'll need to change the owner and group to oracle:oinstall (similar to the `passwords.txt` file like you'll see shortly). As the `opc` user, issue the following command: https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712
+about user/groups in linux: https://docs.oracle.com/en/database/oracle/oracle-database/19/ladbi/identifying-an-oracle-software-owner-user-account.html
+
+`sudo chown oracle:oinstall /home/oracle/Wallet_tempadb.zip`
+
+Then switch back to the `oracle` user to view the changes to the file permissions. As the `oracle` user issue the `ls -l` command again, and you'll see: 
+
+```sh
+total 28
+-rw-r--r--. 1 oracle oinstall    45 Mar 18 13:24 passwords.txt
+-rw-r--r--. 1 oracle oinstall 21975 Mar 17 20:55 Wallet_tempadb.zip
+```
+
+This is good, you know have most of what you need to complete the ORDS *slient* ADB installation.
+
+For silent installation, you'll need:
+
+| Configuration option | Required | Command Option | Notes |
+| -------------------- | :--------: | -------------- |  ----- |
+|Database Pool         |        | | You can omit this, ORDS will default to the `/default` database pool. THIS IS OKAY!   |
+|Wallet Path | :white_check_mark: | `--wallet /home/oracle/Wallet_tempadb.zip` | Either needs to exist in the same folder as the database pool's config directory, or you need to explicitly name it. Since the idea is to automate this stuff "on the fly," no configuration folders would exist. Its possible to recreate these folders and have them ready to go, but that is a more advanced set-up. |
+|Wallet Service Name | | | If we don't include this, then it will simply default to the `Wallet_[the database_"short name"_low` service level. This is okay, that is what is in the default ADB ORDS anyways.|
+|Admin username |:white_check_mark: | --admin-user ADMIN | This is the "Admin" unique to ADB. This doesn't exist for a non-ADB installation. You'd use something like PDB_DBA or PDBDBA for this.|
+|Admin Password |:white_check_mark: |`--password-stdin < passwords.txt`| For simplicity, the passwords will all be identical. Maybe not the most ideal approach, but for automating, it will make things much smoother. |
+|Runtime Username | :white_check_mark: | `--db-user ORDS_PUBLIC_USER_02` | You already have an `ORDS_PUBLIC_USER` in ADB. That is the "OG" ORDS runtime user. Each time you spin up a new compute instance, it's runtime user would be need to be something like: `ORDS_PUBLIC_USER_COMPUTE_XX` (where "XX" is a variable), or something similar. It just needs to be easily identifiable, easily tracked. |
+|Runtime Password | :white_check_mark: | `--password-stdin < passwords.txt` option| Same notes as above. |
+|PL/SQL Gateway Username | :white_check_mark: | `--gateway-user ORDS_PLSQL_GATEWAY_01` | An `ORDS_PLSQL_GATEWAY` user already exists. So you can name the subsequent users similar to how you've chosen for the `ORDS_PUBLIC_USER`. Something like: `ORDS_PLSQL_GATEWAY_COMPUTE_XX`|
+|PL/SQL Gateway Password | :white_check_mark: | `--password-stdin < passwords.txt` | Same notes as above. |
+
+touch passwords.txt
+vi passwords.txt
+press `i` key to insert text
+Add the three passwords, one on each line for:
+
+- `admin-user`
+- `db-user`
+- `gateway-user`
+Press `esc` key, followed by `qw!` to save and exit
+If you've forgotten the directory, issue the `pwd` command, and add your Wallet.zip file to the end of that path. This will be the value for your `--wallet` command option (see the table above).
+
+At this point you should have everything you need to complete the install. You can issue the `ls -a` command to verify this: 
+
+```sh
+[oracle@testinstance01 ~]$ ls -a
+.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  passwords.txt  .viminfo  Wallet_tempadb.zip
+```
+
+Installation Checklist
+|Stuff| Ready/Complete | Notes |
+| --- | :--------------:| --- |
+| Correct Java set | <input type="checkbox"/> | GraalVM 17 or above if you want to take advantage of the `MLE/JS` and `GraphQL` features. |
+| the ords/config/ folder path | | Remember way back when? You still have to include this too: `--config /etc/ords/config` |
+| `passwords.txt` file + file path complete/ready | <input type="checkbox"/> | |
+| `port 8080 open`| <input type="checkbox"/> |ORDS needs this for when it starts up, unless you are using HTTPS, then you'll need port 8443. |
+| `port 80 open`| <input type="checkbox"/> | Why this? I believe the Network Health Checker uses port 80 for its health checking/reporting. |
+| Wallet file ownership changed to `oracle:oinstall` | <input type="checkbox"/> | |
+| ORDS CLI command options ready| <input type="checkbox"/> | see Configuration Settings table above | |
+
+```sh
+ords --config /etc/ords/config install adb --admin-user ADMIN --db-user ORDS_PUBLIC_USER_COMPUTE_01 --gateway-user ORDS_PLSQL_GATEWAY_COMPUTE_01 --wallet /home/oracle/Wallet_tempadb.zip --password-stdin < passwords.txt
+```
+
+Question about the `--config folder location`. We are told to include the folder path in the above command, as: `/etc/ords/config`. BUT, this entire time, we've been in the `/home/oracle` directory. Should we stay in this directory? Will the ORDS know how to "get to" the `/etc/ords/config` folder, even though you are in another directory? The `etc` folder is located a `/`, when you `cd` to it, you are located at `/etc`, cd further, till you are in the `config` folder, and you'll be at `/etc/ords/config`. I guess that makes sense, since `/` is the top. Same as if you were at `/home/oracle`. That initial `/` denotes the top-most level of your directories. So, it probably works. 
+
+> :memo: **NOTE:** If you ever get lost as the `oracle` user. Meaning, if you've been navigating around the directories, and you just want to get back to "home base", I just `exit` as the `oracle` user, and then as the `opc` user I issue the `sudo su - oracle` again, that takes you back to the `/home/oracle` location. 
+
+Running the `ords install...` command:
+
+```sh
+[oracle@testinstance01 ~]$ ords --config /etc/ords/config install adb --admin-user ADMIN --db-user ORDS_PUBLIC_USER_COMPUTE_01 --gateway-user ORDS_PLSQL_GATEWAY_COMPUTE_01 --wallet /home/oracle/Wallet_tempadb.zip --password-stdin < passwords.txt
+```
+
+And the output you'll see (unless of course you are automating, then you won't see any of this):
+
+```sh
+ORDS: Release 24.4 Production on Tue Mar 18 14:12:21 2025
+
+Copyright (c) 2010, 2025, Oracle.
+
+Configuration:
+  /etc/ords/config
+
+Oracle REST Data Services - Non-Interactive Customer Managed ORDS for Autonomous Database
+Connecting to Autonomous database user: ADMIN TNS Service: TEMPADB_LOW
+Retrieving information
+The setting named: db.wallet.zip.path was set to: /home/oracle/Wallet_tempadb.zip in configuration: default
+The setting named: db.wallet.zip.service was set to: TEMPADB_LOW in configuration: default
+The setting named: db.username was set to: ORDS_PUBLIC_USER_COMPUTE_01 in configuration: default
+The setting named: db.password was set to: ****** in configuration: default
+The setting named: plsql.gateway.mode was set to: proxied in configuration: default
+The setting named: security.requestValidationFunction was set to: ords_util.authorize_plsql_gateway in configuration: default
+2025-03-18T14:12:24.073Z INFO        Created folder /home/oracle/logs
+2025-03-18T14:12:24.074Z INFO        The log file is defaulted to the current working directory located at /home/oracle/logs
+2025-03-18T14:12:24.325Z INFO        Connecting to Autonomous database user: ADMIN TNS Service: TEMPADB_LOW
+2025-03-18T14:12:26.972Z INFO        ... Verifying Autonomous Database runtime user
+2025-03-18T14:12:27.881Z INFO        ... Verifying Autonomous Database gateway user
+2025-03-18T14:12:27.882Z INFO        Completed configuring for Customer Managed Oracle REST Data Services version 24.4.0.r3451601. Elapsed time: 00:00:03.553 
+
+2025-03-18T14:12:27.885Z INFO        Log file written to /home/oracle/logs/ords_adb_2025-03-18_141224_07526.log
+2025-03-18T14:12:27.890Z INFO        To run in standalone mode, use the ords serve command:
+2025-03-18T14:12:27.891Z INFO        ords --config /etc/ords/config serve
+2025-03-18T14:12:27.891Z INFO        Visit the ORDS Documentation to access tutorials, developer guides and more to help you get started with the new ORDS Command Line Interface (http://oracle.com/rest).
+[oracle@testinstance01 ~]$ 
+```
+
+Review results and artifacts 
+
+2025-03-18T14:12:27.885Z INFO        Log file written to /home/oracle/logs/ords_adb_2025-03-18_141224_07526.log
+2025-03-18T14:12:27.890Z INFO        To run in standalone mode, use the ords serve command:
+2025-03-18T14:12:27.891Z INFO        ords --config /etc/ords/config serve
+
+You can see the new user schemas in your database, from the SQL Worksheet Navigator. 
+
+we can now peek at the configuration folder, to see what has changed. 
+
+You can `cd` straight to the `/etc/ords/config` with the `cd /etc/ords/config` command. And if you issue the `ls -a` command, you'll see two new folders: `databases` and `global`.
+
+```sh
+[oracle@testinstance01 config]$ ls -a
+.  ..  databases  global
+```
+
+cd databases
+[oracle@testinstance01 databases]$ ls -a
+.  ..  default
+
+[oracle@testinstance01 databases]$ cd default
+[oracle@testinstance01 default]$ ls -a
+.  ..  pool.xml  wallet
+
+[oracle@testinstance01 default]$ cat pool.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Mar 18 14:12:24 UTC 2025</comment>
+<entry key="db.username">ORDS_PUBLIC_USER_COMPUTE_01</entry>
+<entry key="db.wallet.zip.path">/home/oracle/Wallet_tempadb.zip</entry>
+<entry key="db.wallet.zip.service">TEMPADB_LOW</entry>
+<entry key="plsql.gateway.mode">proxied</entry>
+<entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
+</properties>
+
+Either `cd ..` and `cd ..` again or simply `cd /etc/ords/config` so you are at the level where both `databases` and `global` folders are visisble:
+
+```sh
+[oracle@testinstance01 config]$ ls -a
+.  ..  databases  global
+```
+
+```sh
+[oracle@testinstance01 config]$ cd global
+[oracle@testinstance01 global]$ ls -a
+.  ..  settings.xml
+```
+
+```sh
+[oracle@testinstance01 global]$ cat settings.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Mar 18 14:12:23 UTC 2025</comment>
+</properties>
+```
+
+Just to be safe, and so we are all on the same page, navigate back to the `/home/oracle` directory. Issue the `pwd` command to view your current directory. Then issue the `ls -a` command to review the files in this directory (nothing will have changed, ths)
+
+```sh
+[oracle@testinstance01 ~]$ pwd 
+/home/oracle
+[oracle@testinstance01 ~]$ ls -a
+.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  logs  passwords.txt  .viminfo  Wallet_tempadb.zip
+[oracle@testinstance01 ~]$ 
+```
+
+
+
+ords --config /etc/ords/config serve
