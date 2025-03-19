@@ -87,7 +87,7 @@ Depending on what version of ORDS you are installing, you'll need the minimum ve
 
 I should be clear, you aren't installing ORDS, you are just pulling the ORDS RPM into your compute instance. If you are on Linux 8 or above you can use `dnf`as it is more performant.[^321]
 
-[321]: Why `dnf` and not `yum`? In short, `dnf` is better. For...reasons. I'm not an expert, I just read up, and the do what I'm told. But [here is some background](https://docs.oracle.com/en/operating-systems/oracle-linux/8/relnotes8.0/ol8-NewFeaturesandChanges.html#ol8-features-yum) on the support for *Dandified yum* or `dnf`. Who comes up with these names?
+[^321]: Why `dnf` and not `yum`? In short, `dnf` is better. For...reasons. I'm not an expert, I just read up, and the do what I'm told. But [here is some background](https://docs.oracle.com/en/operating-systems/oracle-linux/8/relnotes8.0/ol8-NewFeaturesandChanges.html#ol8-features-yum) on the support for *Dandified yum* or `dnf`. Who comes up with these names?
 
 `sudo dnf install ords -y`
 
@@ -237,11 +237,11 @@ For this exercise, you don't need SQLcl yet, but we are setting it up for future
 
 #### 3.2.3 GraalVM 21 Enterprise Edition (based on Java 17 JDK)
 
-There are two commands that I issued. One for GraalVM[^3231,3232], the other for the JavaScript component:
+There are two commands that I issued. One for GraalVM[^3231] [^3232], the other for the JavaScript component:
 
-[3231]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK)? For one, its a pretty stable release. Secondly, at some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. I still need to work out the steps for manually installing the JavaScript component on the later versions of GraalVM. This version works just fine for the latest version of ORDS and SQLcl.
+[^3231]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK)? For one, its a pretty stable release. Secondly, at some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. I still need to work out the steps for manually installing the JavaScript component on the later versions of GraalVM. This version works just fine for the latest version of ORDS and SQLcl.
 
-[3232]: The GraalVM installation seen here are based, in part, on the steps [found here](https://docs.oracle.com/en/learn/get-started-with-graalvm-on-oracle-linux/#task-2-install-graalvm-enterprise-oracle-linux).
+[^3232]: The GraalVM installation seen here are based, in part, on the steps [found here](https://docs.oracle.com/en/learn/get-started-with-graalvm-on-oracle-linux/#task-2-install-graalvm-enterprise-oracle-linux).
 
 `sudo dnf install graalvm21-ee-17 -y`
 
