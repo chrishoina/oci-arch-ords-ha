@@ -11,6 +11,8 @@
 
 ## 2 Database details
 
+Some select details about the Autonomous datbase used for this demonstration:
+
 | Field | Details |
 | ---- | --------------- |
 | Name | tempadb |
@@ -23,7 +25,7 @@
 
 > :bulb: Create and connect to your first OCI Compute Instance. [Learn how](https://docs.oracle.com/en-us/iaas/Content/Compute/tutorials/first-linux-instance/overview.htm).
 
-Below are the details of the compute instance I'm using.  
+Below are the details of the compute instance I'm using in this demonstration:
 
 | Field | Details | Notes |
 | ---- | --------------- | ------------- |
@@ -91,10 +93,9 @@ I should be clear, you aren't installing ORDS, you are just pulling the ORDS RPM
 
 `sudo dnf install ords -y`
 
-> :bulb: **TIP:** Including the `-y` saves you from having to manually accept the installation of the RPM. The same applies for ORDS, SQLcl, and Java. We are going to automate this for a Terraform stack, so we are doing two things here: (1) documenting how to do this in 2025 and (2) prepping for the next phase (Terraform). 
+> :bulb: **TIP:** Including the `-y` saves you from having to manually accept the installation of the RPM. The same applies for ORDS, SQLcl, and Java. We are going to automate this for a Terraform stack, so we are doing two things here: (1) documenting how to do this in 2025 and (2) prepping for the next phase (Terraform).
 
-
-:memo: **NOTE:** Pay attention to the helpful notes, after the ORDS RPM has been installed 
+:memo: **NOTE:** Pay attention to the helpful notes, after the ORDS RPM has been installed.
 
 ```sh
 WARN: ORDS requires Java 17.
@@ -253,7 +254,7 @@ There are two commands that I issued. One for GraalVM[^3231] [^3232], the other 
 
 ##### 3.2.3.1 Setting `JAVA` environment variables
 
-You need to set the `JAVA_HOME` environment variable, followed by setting it in the `PATH` environment variable.
+You need to set your `JAVA_HOME`, followed by setting it in the `PATH` environment variable.
 
 The commands I used, in order:
 
@@ -304,7 +305,7 @@ Here are some observations at this point (in no particular order):
 
    > :question: What happens when I switch to the `oracle` user, with the `sudo su - oracle` command? And *then* try to peek into these?  
    >
-   > Answer: Nothing. As the `oracle` user, the `/opt/oracle/ords` is identical same.
+   > Answer: Nothing. As the `oracle` user, the `/opt/oracle/ords` directory is identical.
    >
    > ```sh
    > .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
@@ -316,7 +317,7 @@ Here are some observations at this point (in no particular order):
 
 ### 4.1 Add the ORDS <code>bin</code> to your <code>$PATH</code>
 
-This is another step that can really be done anytime between the time you installed the ORDS RPM into your compute instance until you issue the `ords serve` command. The complete steps are in [our docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30). Below is an abbreviated demonstration.  
+This step can really be done anytime between the time you installed the ORDS RPM into your compute instance until you issue the `ords serve` command. The complete steps are in [our docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30). Below is an abbreviated demonstration.  
 
 Commands I issued:
 
@@ -327,7 +328,9 @@ source ~/.bash_profile
 
 ![24-setting-ords-path](./images/24-setting-ords-path.png " ")
 
-And if you are curious, you can issue the `env` command to review your current environment variables. You should see mentions of GraalVM as well as the ORDS `/bin`. 
+And if you are curious, you can issue the `env` command to review your current environment variables. You should see mentions of GraalVM as well as the ORDS `/bin`.
+
+![25-reviewing-env-variables](./images/25-reviewing-env-variables.png " ")
 
 <!-- We used `./bashrc` when setting Java. But we use `./bash_profile` when setting the ORDS `/bin`, so what is it? What is preferred or more correct; `./bashrc` or `./bash_profile`? Details  -->
 
@@ -345,7 +348,7 @@ sudo firewall-cmd --permanent  --add-port=80/tcp
 sudo firewall-cmd --reload
 ```
 
-If you want to inspect what you just did, you can issue the `sudo firewall-cmd --list-all-zones` command to review your firewall settings.[^41] I'm including an image. Below that image is a complete print out of what I observed in my compute instance's terminal.
+If you want to inspect what you just did, you can issue the `sudo firewall-cmd --list-all-zones` command to review your firewall settings.[^41] I'm including an image. And below that image is a complete print out of what I observed in my compute instance's terminal.
 
 [^41]: You owe it to yourself to read about the firewall utility. We often gloss over it in tutorials, but [here are the docs](https://firewalld.org/documentation/man-pages/firewall-cmd.html) for reference.
 
@@ -513,15 +516,15 @@ work
 
 ### 4.2 Setup, continued
 
-You'll perform this install with the ORDS CLI.[^421] The following steps assume you have an ADB up and running. You'll also need to download your Cloud Wallet and *securely copy it* to your compute instance.[^422] And remember these TNS names for later.
+You'll perform this install with the ORDS CLI.[^421] The following steps assume you have an ADB up and running. You'll also need to download your Cloud Wallet and *securely copy it* to your compute instance.[^422] And remember those TNS names for later.
 
 ![18-database-connection-button](./images/18-database-connection-button.png " ")
 
 ![19-download-wallet-and-tns-names](./images/19-download-wallet-and-tns-names.png " ")
 
-[421]: And [here](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0) is everything you'll need to perform a *silent install* for and ORDS *in ADB* installation. I would read through that entire section, just so you understand what is happening during this install.
+[^421]: And [here](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0) is everything you'll need to perform a *silent install* for and ORDS *in ADB* installation. I would read through that entire section, just so you understand what is happening during this install.
 
-[422]: [About the Cloud Wallet](https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
+[^422]: [About the Cloud Wallet](https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
 ).  
 
 #### 4.2.1 Copy the Cloud Wallet to your compute instance
@@ -538,36 +541,36 @@ scp -i [Your compute instance's private key] /the/locally/saved/path/to/your/wal
    >
    > ![21-database-short-name](./images/21-database-short-name.png " ")
 
-After you copy over the wallet `.zip` file you can verify its existence by navigating to the `/home/opc` directory.
+After you copy over the wallet `.zip` file you can verify its existence by navigating to the `/home/opc` directory. You should now see it in there; but you're note finished yet.
 
 ![22-verifying-the-wallet-exists](./images/22-verifying-the-wallet-exists.png " ")
 
 #### 4.2.2 Move the Wallet and change ownership
 
-You need to move the wallet file from `/home/opc/Wallet_tempadb.zip` to `/home/oracle/Wallet_tempadb.zip`. And then change the ownership, like in [this example](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). Why? Because the actual ORDS install is performed by the `oracle` user. And that user needs your cloud walled. The command I used:
+You need to move the wallet file from `/home/opc/Wallet_tempadb.zip` to `/home/oracle/Wallet_tempadb.zip`. And then change the ownership, like in [this example](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). Why? Because the actual ORDS install is performed by the `oracle` user. And that user needs your cloud wallet. The command I used:
 
 ```sh
 sudo mv /home/opc/Wallet_tempadb.zip /home/oracle/Wallet_tempadb.zip
 ```
 
-
-
-Issuing the `ls -a` you'll see the following: 
+And then, if you issue the `ls -a` command, you'll see it has been relocated: 
 
 ```sh
 .  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh
 ```
 
-About the ls command: https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html#ls_003a-List-directory-contents
+About the ls command: 
 
-The Wallet.zip file is gone.
+If you switch to the `oracle` user, with `sudo su - oracle`, then issue the `ls -a` command, you'll see the file. Issue the 'ls -a` command to view the file properties.[^4221]
 
-Switch to the Oracle user with `sudo su - oracle`, then issue the `ls -l` command, to view file ownership properties. You'll see this:
+[^4221]: If you don't know about all the available `ls` commands, you should read up on it [here](https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html#ls_003a-List-directory-contents).
+
+You'll see this:
 
 ```sh
 total 24
 -rw-r--r--. 1 opc opc 21975 Mar 17 20:55 Wallet_tempadb.zip
-```
+``` 
 
 Great resource for what r, rw, r, etc means: https://www.redhat.com/en/blog/linux-file-permissions-explained
 
