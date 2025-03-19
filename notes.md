@@ -1,71 +1,96 @@
-# 1. ORDS in an OCI compute instance using available RPMs
+# 1 ORDS in an OCI compute instance using available RPMs
 
-## 2. Some questions
+<!-- ## 2 Some questions
 
 - What happens when you install ORDS in a compute instance, in OCI, with the `sudo dnf install ords -y` command?
 - What does the configuration folder structure look like?
 - What does the bin look like?
 - What are the users that install and invoke the `ords serve` command?
 - Detail the steps for installing sqlcl, and java.
-- Do you need to explicitly set the `PATH`s for the ORDS `/bin` and SQLcl `/bin`? Or is that already done with the `sudo dnf install [product]` command?
+- Do you need to explicitly set the `PATH`s for the ORDS `/bin` and SQLcl `/bin`? Or is that already done with the `sudo dnf install [product]` command? -->
 
-## 3. Technical details
+## 2 Database details
 
-What am I supposed to call this? I am doing some testing, and here are the "variables" in my experimentation:
+| Field | Details |
+| ---- | --------------- |
+| Name | tempadb |
+| Workload type | Data Warehouse|  
+| Database Version | 23ai |
 
-| Name | Characteristics | Notes/Details |
+![01-temp-adb](./images/01-temp-adb.png " ")
+
+## 3 Compute Instance
+
+> :bulb: Create and connect to your first OCI Compute Instance. [Learn how](https://docs.oracle.com/en-us/iaas/Content/Compute/tutorials/first-linux-instance/overview.htm).
+
+Below are the details of the compute instance I'm using.  
+
+| Field | Details | Notes |
 | ---- | --------------- | ------------- |
-|testinstance01 | IPv4, no Boot volume | In ords-vcn, public subnet-ords-vcn |
-| Linux OS | 9 | Image build: 2025.02.28-0|
-|Shape | AMD VM.Standard.E4.Flex | 1 OCPU, 16GB memory, 1 Gbps bandwidth |
+| Name | test_instance_02 | |
+| Linux OS | 9.5| 2025-02-28-0 build[^3] |
+|Shape | AMD VM.Standard.E4.Flex | |
+| OCPU count | 1 | |
+| Network bandwidth | 1 Gbps | |
+| Memory | 16GB ||
+| Local disk | Block storage only | |
 
-Saved the private key file in the .ssh folder.
-Public IP address: `132.226.202.219`
+![02-compute-details-01](./images/02-compute-details-01.png " ")
+![03-compute-details-02](./images/03-compute-details-02.png " ")
 
-> **:memo: NOTE:** When you view the compute instance details in the OCI dashnboard, the OS shows what looks to be a "fully-qualified" version. When you create the compute instance, you'll see soemthing like `Linux 9`.  
->
->But when you view the details (after the instance has provisioned) it will show something like this: `Oracle-Linux-9.5-2025.02.28-0`. 
->
-> I believe, for Terraform files you need to use `9.5` as the OS. Just noting for future steps.
+[^3]: When you view the compute instance details in the OCI dashboard, the OS shows what looks to be a "fully-qualified" version. However, when you first create your compute instance, you'll see soemthing like `Linux 9`. Not really relevant, but nice to be aware of. But when you view the details (after the instance has provisioned) it will show something like this: `Oracle-Linux-9.5-2025.02.28-0`. If you intend on doing anything with Terraform stacks, I believe you'll use `9.5` as the OS. Just noting for the future.
 
-To access the compute instance, we follow the steps outlined [here](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/connect-to-linux-instance.htm).
+### 3.1 Connecting to the the Compute Instance
 
-### 3.1 Accessing the Compute Instance
+> :bulb: How to connect to a Linux instance. [Take me there](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/connect-to-linux-instance.htm).
 
-1. I'll `cd` to my .ssh directory to make those steps a little easier.
-2. Issue the `chmod 400 [your private key file]` command.[^3.1]
+I will assume you've followed the instructions in that link above. The only minor difference is that I've placed my compute instance's private key file in my `.ssh` folder (this makes connecting to my compute instance somewhat simpler).
+
+![04-ssh-folder](./images/04-ssh-folder.png " ")
+
+Otherwise I followed the same exact steps in that tutorial. Here are the steps I took: 
+
+1. I `cd'd` to the `.ssh` folder/directory on my local computer (my Macbook).
+2. I then issued the `chmod 400 [your private key file]` command to change the file's permissions[^3.1]
 3. Use `ssh -i [your private key file] opc@[your compute's public IP address`. Accept the "Are you sure you want to continue connecting (yes/no/[fingerprint])?" question (i.e. "yes").
 4. You'll be logged in as the `opc` user.
 
-<!-- Question for me, do we need to do this chmod command when we are doing this with Terraform? -->
+> :memo: **Note:** Just an FYI, you'll find yourself in the `/home/opc` directory. It's good to know where you are at all times, because a lot is about to happen in the next few steps, and it is *extremely easy* to get lost.
 
-Here is where things are unclear. Should we switch users now, to the `oracle` user? Or should we issue the `sudo ords install`, `sudo sqlcl install`, and `sudo graalvm install` commands as `opc`?
+[^3.1]: `chmod 400` can be translated as "the current user has read-only access." Learn more about the [chmod](https://ss64.com/bash/chmod.html) commmand. While you are there, enter `400` in that file permissions table to see the how the `read/write/execute` permissions change for the `Owner/Group/Other` fields.
 
-The *absolute* top level directory consists of the following (basically "`cd`ing" until you can't anymore):
+<!-- Here is where things are unclear. Should we switch users now, to the `oracle` user? Or should we issue the `sudo ords install`, `sudo sqlcl install`, and `sudo graalvm install` commands as `opc`? -->
 
-```sh
-.  ..  afs  bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  .swapfile  sys  tmp  usr  var
-```
+> :mag_right: **Explore:** While you are logged in as the `opc` user, you should `cd /` to the top-most level of the compute instance. This is a great opportunity to see your directories *before* you begin altering/adding anything. Using the `ls -a` command, I observed the following:
+>
+> ![06-top-level-folder-as-opc-user](./images/06-top-level-as-opc-user.png " ")
+>
+> ```sh
+> .  ..  afs  bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  .swapfile  sys  tmp  usr  var
+> ```
+>
+> When you are done, issue the `cd /home/opc` to get back to where you came from.
+>
+> ![07-returning-to-home-opc-dir](./images/07-returning-to-home-opc-dir.png " ")
 
-It looks like when you first sign-in, you are immediately placed in the `/home/opc` directory. I assume all installs are to be done at this location. In other words, when following along with documentation, the product assumes you are here. I do not know if this matters though. It may be that the underlying scripts just "know" where you put stuff.
-
-I'll install my "dependecies" next: ORDS, SQLcl, GraalVM.
-
-[^3.1]: About the [chmod](https://ss64.com/bash/chmod.html) commmand.
+Onto the set up. Next I'll install my "dependencies": ORDS, SQLcl, GraalVM.
 
 ### 3.2 Installing dependencies
 
+Depending on what version of ORDS you are installing, you'll need the minimum version of Java. It doesn't look as though Java is configured on these base Linux machines, but we can fix that soon enough. You'll also want to obtain ORDS and SQLcl from the Oracle Linux Yum repositories. I walk through those steps next.
+
 #### 3.2.1 ORDS
+
+I should be clear, you aren't installing ORDS, you are just pulling the ORDS RPM into your compute instance. If you are on Linux 8 or above you can use `dnf`as it is more performant.[^3.2.1]
+
+[3.2.1]: Why `dnf` and not `yum`? In short, `dnf` is better. For...reasons. I'm not an expert, I just read up, and the do what I'm told. But [here is some background](https://docs.oracle.com/en/operating-systems/oracle-linux/8/relnotes8.0/ol8-NewFeaturesandChanges.html#ol8-features-yum) on the support for *Dandified yum* or `dnf`. Who comes up with these names?
 
 `sudo dnf install ords -y`
 
-I do not know if you need the `-y` flag. It works just fine with it. I assume if you don't include the `-y` that means you'll have to take the additional step to accept some condition. Adding the `-y` seems to work better with scripting (as an "automation insurance policy").
+> :bulb: **TIP:** Including the `-y` saves you from having to manually accept the installation of the RPM. The same applies for ORDS, SQLcl, and Java. We are going to automate this for a Terraform stack, so we are doing two things here: (1) documenting how to do this in 2025 and (2) prepping for the next phase (Terraform). 
 
-Why `dnf` and not `yum`?[^3.2.1]
 
-[3.2.1]: In short, `dnf` is better. For...reasons. I'm not an expert, I just read up, and the do what I'm told. But [here is some background](https://docs.oracle.com/en/operating-systems/oracle-linux/8/relnotes8.0/ol8-NewFeaturesandChanges.html#ol8-features-yum) on the support for *Dandified yum* or `dnf`. Who comes up with these names?
-
-There are some helpful notes after the ORDS has been installed:
+:memo: **NOTE:** Pay attention to the helpful notes, after the ORDS RPM has been installed 
 
 ```sh
 WARN: ORDS requires Java 17.
@@ -76,6 +101,8 @@ INFO: To enable the ORDS service during startup, run the below command:
         sudo  systemctl enable ords
 ```
 
+![08-ords-rpm-install](./images/08-ords-rpm-install.png " ")
+
 > **:memo: NOTE:** This isn't the same as installing ORDS to "talk" to your database. All this does is install the ORDS product folder. You'll still have to configure it.
 
 If you issue a `cd ..` command, you'll move up a folder. You should now see the following:
@@ -84,31 +111,37 @@ If you issue a `cd ..` command, you'll move up a folder. You should now see the 
 .  ..  opc  oracle
 ```
 
+![09-opc-and-oracle-dirs](./images/09-opc-and-oracle-dirs.png " ")
+
 Whereas, before the ORDS install, you would have seen only:
 
 ```sh
 .  ..  opc
 ```
 
-It looks like whatever you did, it just created this `oracle` directory. You can't naviate (`cd oracle`) to this folder, you'll recieve an `-bash: cd: oracle: Permission denied` error. This is probably the `oracle` user, that I've seen referenced *everywhere*.
-
-> **:memo: FYI:** The `sudo cd oracle` command doesn't do anything either.
-
-Moving on the SQLcl and then GraalVM.
+I don't have an image of this. But I've also confirmed, internally, that we create this `oracle` user for you when you pull down that ORDS RPM (thanks Adrian 🙂)
 
 #### 3.2.2 SQLcl
 
+For this exercise, you don't need SQLcl yet, but we are setting it up for future steps.
+
 `sudo dnf install sqlcl -y`
 
-Same experience here. No issues with the install. I presume this sets your `$PATH` for you? Something seems to be working in some capactity. Because if you issue the `sql -version` command you recieve this error:
+![10-ords-dnf-install](./images/10-ords-dnf-install.png " ")
 
-```sh
-Error: SQLcl requires Java 11 and above to run.
-    Found Java version no_java.
-    Please set JAVA_HOME to appropriate version.
-```
+> :memo: **NOTE:** If you are loosely following these steps, and you attempt to issue a SQLcl command (like `sql /nolog`), you'll recieve an error similar to this:
+>
+> ```sh
+> Error: SQLcl requires Java 11 and above to run.
+>     Found Java version no_java.
+>     Please set JAVA_HOME to appropriate version.
+> ```
+>
+> It is only because you haven't set up Java yet. Otherwise, if you have set up Java, or already have a supported version installed, you *can* issue the `sql /nolog` command.
+>
+> ![11-sql-cl-nolog](./images/11-sql-cl-nolog.png " ")
 
-It looks like Java isn't installed or configured. Is that correct? Issuing the `which java` command and you'll get:
+<!-- It looks like Java isn't installed or configured. Is that correct? Issuing the `which java` command and you'll get:
 
 ```sh
 /usr/bin/which: no java in (/home/opc/.local/bin:/home/opc/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin)
@@ -194,22 +227,31 @@ It looks like Java isn't installed or configured. Is that correct? Issuing the `
 > }
 > _=/usr/bin/env
 > OLDPWD=/home/opc
-> ```
+> ``` -->
+<!-- 
+   Actually, it looks like you don't even need to set the `$PATH` for the SQLcl `/bin` directory. It [seems like](https://docs.oracle.com/en/database/oracle/sql-developer-command-line/24.4/sqcug/working-sqlcl.html) the only dependency is Java. Onto Java, or GraalVM in this case. -->
 
-   Actually, it looks like you don't even need to set the `$PATH` for the SQLcl `/bin` directory. It [seems like](https://docs.oracle.com/en/database/oracle/sql-developer-command-line/24.4/sqcug/working-sqlcl.html) the only dependency is Java. Onto Java, or GraalVM in this case.
+#### 3.2.3 GraalVM 21 Enterprise Edition (based on Java 17 JDK)
 
-#### 3.2.3 GraalVM 21 Enterprise Edition (based on Java 17 JDK)[^3.2.3]
+There are two commands that I issued. One for GraalVM[^3.2.3a,3.2.3b], the other for the JavaScript component:
 
-Instructions on graalvm install in linux https://docs.oracle.com/en/learn/get-started-with-graalvm-on-oracle-linux/#task-2-install-graalvm-enterprise-oracle-linux
-There are two commands that I issued. One for GraalVM, the other for the JavaScript component:
+[3.2.3a]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK)? For one, its a pretty stable release. Secondly, at some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. I still need to work out the steps for manually installing the JavaScript component on the later versions of GraalVM. This version works just fine for the latest version of ORDS and SQLcl.
+
+[3.2.3b]: The GraalVM installation seen here are based, in part, on the steps [found here](https://docs.oracle.com/en/learn/get-started-with-graalvm-on-oracle-linux/#task-2-install-graalvm-enterprise-oracle-linux).
 
 `sudo dnf install graalvm21-ee-17 -y`
 
-`sudo dnf install graalvm21-ee-17-javascript`
+![12-graalvm-install](./images/12-graalvm-install.png " ")
 
-Afterwhich, you need to set the `JAVA_HOME` environment variable, followed by setting it in the `PATH` environment variable.
+`sudo dnf install graalvm21-ee-17-javascript -y`
 
-The commands I issued, in order:
+![13-graalvm-javascript-install](./images/13-graalvm-javascript-install.png " ")
+
+##### 3.2.3.1 Setting `JAVA` environment variables
+
+You need to set the `JAVA_HOME` environment variable, followed by setting it in the `PATH` environment variable.
+
+The commands I used, in order:
 
 1. `sudo echo -e "export JAVA_HOME=/usr/lib64/graalvm/graalvm21-ee-17" >> ~/.bashrc`
 
@@ -217,23 +259,22 @@ The commands I issued, in order:
 
 3. `source ~/.bashrc`
 
-    > :memo: **NOTE:** The command line didn't like when I issued the `sudo source ~/.bashcr` command.
+![14-setting-java-home-and-path](./images/14-setting-java-home-and-path.png " ")
 
-About source: https://ss64.com/bash/source.html
+> :bulb: [Read up](ttps://ss64.com/bash/source.html) on the `source` command.
 
 *Now* if I issue the `java -version` command I will see:
 
 ```sh
+[opc@test-instance-02 ~]$ java -version
 java version "17.0.14" 2025-01-21 LTS
 Java(TM) SE Runtime Environment GraalVM EE 21.3.13 (build 17.0.14+8-LTS-jvmci-21.3-b98)
 Java HotSpot(TM) 64-Bit Server VM GraalVM EE 21.3.13 (build 17.0.14+8-LTS-jvmci-21.3-b98, mixed mode, sharing)
 ```
 
-[3.2.3]: Why GraalVM 21 Enterprise Edition (based on Java 17 JDK). Its a pretty stable release. At some point between GraalVM 21 and 23 (not to be confused with the Enterprise Edition which has its own versioning) deprecated the `gu` installer. So, trying to get the JavaScript component to work with later versions of GraalVM is a huge pain in the ass. I've wasted a couple weeks' worth of my time trying to figure it out. Until that user experience is improved, I'm staying with the Java 17 JDK-based GraalVM version. Java `7 JDK works just fine for both SQLcl and ORDS. I'd also like to set ORDS up to use some of the MLE/Js and GraphQL functionality. And GraalVM is required for both.
+## 3.2.4 What do we know so far?
 
-## 3.2.4 What do we know?
-
-Here are some observations at this point (in no particular order): 
+Here are some observations at this point (in no particular order):
 
 1. In the `/opt/oracle` directory, there are two sub-directories: `/ords` and `/sqlcl`.  
 
@@ -243,99 +284,323 @@ Here are some observations at this point (in no particular order):
     .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
     ```
 
+    ![15-opt-oracle-ords-folder](./images/15-opt-oracle-ords-folder.png " ")
+
     While the `opt/oracle/sqlcl` directory consists of:
 
     ```sh
     .  ..  bin  lib  LICENSE.txt  NOTICES.txt  THIRD-PARTY-LICENSES.txt
     ```
 
-2. However, the `/etc` directory *also* has an `ords` directory *and* an `ords.conf` file. This `ords` directory contains a `config` subfolder. You cannot `cd` into it, even with the `sudo` prefix. You cannot `cd` or `cat` the `ords.conf` "thing" either.
+2. However, the `/etc` directory *also* has an `ords` directory *and* an `ords.conf` file. This `ords` directory contains a `config` subfolder. It is currently empty.
 
-    These are both located at: `/etc/ords` and `/etc/ords.conf`.
+   These are both located at: `/etc/ords` and `/etc/ords.conf`.
 
-3. What happens when I switch to the `oracle` user, with the `sudo su - oracle` command? And *then* try to peek into these?  
+   ![16-etc-ords-config-folder](./images/16-etc-ords-config-folder.png " ")
 
-    The `/opt/oracle/ords` is the same:
+   > :question: What happens when I switch to the `oracle` user, with the `sudo su - oracle` command? And *then* try to peek into these?  
+   >
+   > Answer: Nothing. As the `oracle` user, the `/opt/oracle/ords` is identical same.
+   >
+   > ```sh
+   > .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
+   > ```
+   >
+   > ![17-ords-as-oracle-user](./images/17-ords-as-oracle-user.png " ")
 
-    ```sh
-    .  ..  bin  docs  examples  icons  lib  LICENSE.txt  linux-support  NOTICE.txt  ords.war  scripts  THIRD-PARTY-LICENSES.txt
-    ```
+## 4 The ORDS install
 
-## 2.3.5 To-do
+### 4.1 Add the ORDS <code>bin</code> to your <code>$PATH</code>
 
-- [ ] Move through the *actual* ORDS installation. But test using the slient version of the `ords install adb`. It looks like there are [minimal requirements](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0).
-- [ ] Review the how the ords folders have changed after each step
-- [ ] Solving the `ords/bin` mystery; should you just go ahead and point to it as an environment variable (I think yes, and it probably couldnt hurt).
-- [ ] Should you just go ahead and specify the configuration folder as well? Or should you just keep it as this:
-`ords --config /etc/ords/config install adb`?
-- [ ] Should we `mv` the database wallet.zip file, so it is *always* accessible, each time?
-- [ ] How to automate the ords start-up/shut-down?
+This is another step that can really be done anytime between the time you installed the ORDS RPM into your compute instance until you issue the `ords serve` command. The complete steps are in [our docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30). Below is an abbreviated demonstration. Commands I issued: 
 
-## 4. Performing the ORDS install
+```sh
+echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile
+source ~/.bash_profile
+```
 
-### 4.1 Setup
+![24-setting-ords-path](./images/24-setting-ords-path.png " ")
 
-What you need for an ORDS ADB install: [Slient Install in ADB](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0):
+And if you are curious, you can issue the `env` command to review your current environment variables. You should see mentions of GraalVM as well as the ORDS `/bin`. 
 
-- Database Pool: If this option is omitted, then the default database pool is used.
-- Wallet Path: This is required if this option does not exist in the ORDS configuration database pool.
-- Wallet Service Name: The TNS alias name from tnsnames.ora file contained in the wallet zip file. If this option is omitted, and the setting db.wallet.zip.service does not exist in the ORDS configuration database pool, then the wallet service name defaults to `[Your database "short name"]_LOW`.
-- Administrator username and password (Required)
-- Runtime database username and password (Required)
-- PL/SQL gateway username and password (Required)
-- Additional Database Features (What does this mean??)
+<!-- We used `./bashrc` when setting Java. But we use `./bash_profile` when setting the ORDS `/bin`, so what is it? What is preferred or more correct; `./bashrc` or `./bash_profile`? Details  -->
 
-#### 4.1.1 Install steps
+### 4.2 Open up your compute instance's ports
 
-1. Securely copy your database wallet from OCI, into your compute instance. You can do this with the following command:
+You can open up your ports anytime prior to starting up ORDS for the first time. Nothing you do between now and the moment before you issue the `ords serve` command are dependent on ports being open.
+
+However its easier to do this now, to reduce switching back and forth between users. As the `opc` user, issue the following commands:
+
+```sh
+sudo firewall-cmd --permanent  --add-port=8080/tcp
+sudo firewall-cmd --permanent  --add-port=8443/tcp
+sudo firewall-cmd --permanent  --add-port=443/tcp
+sudo firewall-cmd --permanent  --add-port=80/tcp
+sudo firewall-cmd --reload
+```
+
+If you want to inspect what you just did, you can issue the `sudo firewall-cmd --list-all-zones` command to review your firewall settings.[^4.2] I'm including an image. Below that image is a complete print out of what I observed in my compute instance's terminal.
+
+[4.2]: You owe it to yourself to read about the firewall utility. We often gloss over it in tutorials, but [here are the docs](https://firewalld.org/documentation/man-pages/firewall-cmd.html) for reference.
+
+![23-firewall-excerpt](./images/23-firewall-excerpt.png " ")
+
+```sh
+[opc@test-instance-02 ~]$ sudo firewall-cmd --list-all-zones
+block
+  target: %%REJECT%%
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+dmz
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+drop
+  target: DROP
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+external
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: yes
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+home
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client mdns samba-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+internal
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client mdns samba-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+nm-shared
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: dhcp dns ssh
+  ports: 
+  protocols: icmp ipv6-icmp
+  forward: no
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+	rule priority="32767" reject
+
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: ens3
+  sources: 
+  services: dhcpv6-client ssh
+  ports: 8080/tcp 8443/tcp 443/tcp 80/tcp
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+trusted
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: 
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+work
+  target: default
+  icmp-block-inversion: no
+  interfaces: 
+  sources: 
+  services: cockpit dhcpv6-client ssh
+  ports: 
+  protocols: 
+  forward: yes
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+
+```
+
+> :memo: **NOTE:** We "opened" up ports `8080`, `8443`, `80`, and `443` for a few different reasons. In the immediate future, we are installing ORDS, and it will use port 8080 to route HTTP traffic *from* an incoming client's request *to* the database, and back again.
+>
+> And yes, I am aware 8080 is not secure. In phase two of this configuration we are adding more ORDS instances, but we are placing a Load Balancer in front of them. So, some of this will change in the near future. Port 80 and 443 are open for the Load Balancer's Health Checker. If none of that means anything to you, don't worry. It will soon enough.
+
+### 4.2 Setup, continued
+
+You'll perform this install with the ORDS CLI.[^4.2a] The following steps assume you have an ADB up and running. You'll also need to download your Cloud Wallet and *securely copy it* to your compute instance.[^4.2b] And remember these TNS names for later.
+
+![18-database-connection-button](./images/18-database-connection-button.png " ")
+
+![19-download-wallet-and-tns-names](./images/19-download-wallet-and-tns-names.png " ")
+
+[4.2a]: And [here](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0) is everything you'll need to perform a *silent install* for and ORDS *in ADB* installation. I would read through that entire section, just so you understand what is happening during this install.
+
+[4.2b]: [About the Cloud Wallet](https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
+).  
+
+#### 4.2.1 Copy the Cloud Wallet to your compute instance
+
+Securely copy your database wallet into your compute instance. You can do this by opening up another terminal window and issuing the following command (obviously replace these values with your own):
 
 ```sh
 scp -i [Your compute instance's private key] /the/locally/saved/path/to/your/wallet/Wallet_[your ADB "short name"].zip opc@[your compute instance's IP address]:/home/opc
 ```
 
-About the Cloud Wallet, what is in it? https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
+![20-scp-cloud-wallet](./images/20-scp-cloud-wallet.png " ")
 
-Switch to the `oracle` user. With the `sudo su - oracle` command.
+   > :question: **What do I mean by "shortname"?** Its an abbreviated form of your database display name. I'm sure there is a character limit, but this is a pretty short name regardless.
+   >
+   > ![21-database-short-name](./images/21-database-short-name.png " ")
 
-tempadb
-see gitignore*
-TNS names are one of:
+After you copy over the wallet `.zip` file you can verify its existence by navigating to the `/home/opc` directory.
 
-- `tempadb_high`
-- `tempadb_low`
-- `tempadb_medium`
+![22-verifying-the-wallet-exists](./images/22-verifying-the-wallet-exists.png " ")
 
-For simplicity, the database admin and wallet passwords are the same.
-Just need to move this from your downloads to your compute instance
+#### 4.2.2 Move the Wallet and change ownership
 
-Terraform has [a resource](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/database_autonomous_database_wallet) for doing this "locally". It looks like you the contents are derived from the var.tf file. That "stuff" all comes from the schema.yaml file.
+You need to move the wallet file from `/home/opc/Wallet_tempadb.zip` to `/home/oracle/Wallet_tempadb.zip`. And then change the ownership, like in [this example](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). Why? Because the actual ORDS install is performed by the `oracle` user. And that user needs your cloud walled. The command I used:
 
-> :exclamation: **NOTE:** Something to figure out when doing with terraform.
+```sh
+sudo mv /home/opc/Wallet_tempadb.zip /home/oracle/Wallet_tempadb.zip
+```
+
+
+
+Issuing the `ls -a` you'll see the following: 
+
+```sh
+.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh
+```
+
+About the ls command: https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html#ls_003a-List-directory-contents
+
+The Wallet.zip file is gone.
+
+Switch to the Oracle user with `sudo su - oracle`, then issue the `ls -l` command, to view file ownership properties. You'll see this:
+
+```sh
+total 24
+-rw-r--r--. 1 opc opc 21975 Mar 17 20:55 Wallet_tempadb.zip
+```
+
+Great resource for what r, rw, r, etc means: https://www.redhat.com/en/blog/linux-file-permissions-explained
+
+You'll see how the owner and owner group are still `opc`, you'll need to change the owner and group to oracle:oinstall (similar to the `passwords.txt` file like you'll see shortly). As the `opc` user, issue the following command: https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712
+about user/groups in linux: https://docs.oracle.com/en/database/oracle/oracle-database/19/ladbi/identifying-an-oracle-software-owner-user-account.html
+
+`sudo chown oracle:oinstall /home/oracle/Wallet_tempadb.zip`
+
+Then switch back to the `oracle` user to view the changes to the file permissions. As the `oracle` user issue the `ls -l` command again, and you'll see: 
+
+```sh
+total 28
+-rw-r--r--. 1 oracle oinstall    45 Mar 18 13:24 passwords.txt
+-rw-r--r--. 1 oracle oinstall 21975 Mar 17 20:55 Wallet_tempadb.zip
+```
+
+<!-- Terraform has [a resource](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/database_autonomous_database_wallet) for doing this "locally". It looks like you the contents are derived from the var.tf file. That "stuff" all comes from the schema.yaml file. -->
+
+<!-- > :exclamation: **NOTE:** Something to figure out when doing with terraform.
 
 ```sh
 .  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh  Wallet_tempadb.zip
 ```
 
-In directory: `/home/opc/Wallet_tempadb.zip`
+In directory: `/home/opc/Wallet_tempadb.zip` -->
 
-[Something to remember](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). Does the `oracle:oinstall` command need to be used? I think I'm going to do this, since for the install the `Oracle` user is the one completing the ORDS install.
+[Something to remember](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712). 
 
-- Database Pool: If this option is omitted, then the default database pool is used.
-- Wallet Path: This is required if this option does not exist in the ORDS configuration database pool.
-- Wallet Service Name: The TNS alias name from tnsnames.ora file contained in the wallet zip file. If this option is omitted, and the setting db.wallet.zip.service does not exist in the ORDS configuration database pool, then the wallet service name defaults to <DB>_LOW.
-- Administrator username and password (Required)
-- Runtime database username and password (Required)
-- PL/SQL gateway username and password (Required)
-- Additional Database Features (What does this mean??)
+<!-- Does the `oracle:oinstall` command need to be used? I think I'm going to do this, since for the install the `Oracle` user is the one completing the ORDS install. -->
 
-At this point, or even sooner, we'd probably need to open up the ports for the compute instance, since ORDS will be running on either port 8080 (HTTP) or 8443 (HTTPS).
+<!-- At this point, or even sooner, we'd probably need to open up the ports for the compute instance, since ORDS will be running on either port 8080 (HTTP) or 8443 (HTTPS).
 
 sudo firewall-cmd --permanent  --add-port=8080/tcp
+sudo firewall-cmd --permanent  --add-port=8443/tcp
 sudo firewall-cmd --permanent  --add-port=443/tcp
 sudo firewall-cmd --permanent  --add-port=80/tcp
-sudo firewall-cmd --reload
+sudo firewall-cmd --reload -->
 
-https://firewalld.org/documentation/man-pages/firewall-cmd.html
+<!-- https://firewalld.org/documentation/man-pages/firewall-cmd.html
 
 Issuing the `sudo firewall-cmd --list-all-zones`, and you'll see the following:
 
@@ -511,46 +776,7 @@ public (active)
   rich rules: 
 ```
 
-Ports 8080, 443, and 80 are available. I'm not sure if all or some are needed. Or if this is even correct.
-
-chown -R 
-
-Move the file from `/home/opc/Wallet_tempadb.zip` to `/home/oracle/Wallet_tempadb.zip`. And then change the ownership, like in [this example](https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712).
-
-
-sudo mv /home/opc/Wallet_tempadb.zip /home/oracle/Wallet_tempadb.zip
-
-Issuing the `ls -a` you'll see the following: 
-
-```sh
-.  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  .ssh
-```
-
-About the ls command: https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html#ls_003a-List-directory-contents
-
-The Wallet.zip file is gone.
-
-Switch to the Oracle user with `sudo su - oracle`, then issue the `ls -l` command, to view file ownership properties. You'll see this:
-
-```sh
-total 24
--rw-r--r--. 1 opc opc 21975 Mar 17 20:55 Wallet_tempadb.zip
-```
-
-Great resource for what r, rw, r, etc means: https://www.redhat.com/en/blog/linux-file-permissions-explained
-
-You'll see how the owner and owner group are still `opc`, you'll need to change the owner and group to oracle:oinstall (similar to the `passwords.txt` file like you'll see shortly). As the `opc` user, issue the following command: https://docs.oracle.com/en/database/oracle/oracle-database/19/asoag/get-started.html#GUID-15CB716C-74A5-42E5-9BCA-7EC9C9FFA712
-about user/groups in linux: https://docs.oracle.com/en/database/oracle/oracle-database/19/ladbi/identifying-an-oracle-software-owner-user-account.html
-
-`sudo chown oracle:oinstall /home/oracle/Wallet_tempadb.zip`
-
-Then switch back to the `oracle` user to view the changes to the file permissions. As the `oracle` user issue the `ls -l` command again, and you'll see: 
-
-```sh
-total 28
--rw-r--r--. 1 oracle oinstall    45 Mar 18 13:24 passwords.txt
--rw-r--r--. 1 oracle oinstall 21975 Mar 17 20:55 Wallet_tempadb.zip
-```
+Ports 8080, 443, and 80 are available. I'm not sure if all or some are needed. Or if this is even correct. -->
 
 This is good, you know have most of what you need to complete the ORDS *slient* ADB installation.
 
@@ -560,9 +786,9 @@ For silent installation, you'll need:
 | -------------------- | :--------: | -------------- |  ----- |
 |Database Pool         |        | | You can omit this, ORDS will default to the `/default` database pool. THIS IS OKAY!   |
 |Wallet Path | :white_check_mark: | `--wallet /home/oracle/Wallet_tempadb.zip` | Either needs to exist in the same folder as the database pool's config directory, or you need to explicitly name it. Since the idea is to automate this stuff "on the fly," no configuration folders would exist. Its possible to recreate these folders and have them ready to go, but that is a more advanced set-up. |
-|Wallet Service Name | | | If we don't include this, then it will simply default to the `Wallet_[the database_"short name"_low` service level. This is okay, that is what is in the default ADB ORDS anyways.|
-|Admin username |:white_check_mark: | --admin-user ADMIN | This is the "Admin" unique to ADB. This doesn't exist for a non-ADB installation. You'd use something like PDB_DBA or PDBDBA for this.|
-|Admin Password |:white_check_mark: |`--password-stdin < passwords.txt`| For simplicity, the passwords will all be identical. Maybe not the most ideal approach, but for automating, it will make things much smoother. |
+|Wallet Service Name | | | If we don't include this, then it will simply default to the `Wallet_[the database_"short name"_low` service level. This is okay; the `low` service level is what is in the default ADB ORDS anyways.|
+|Admin username |:white_check_mark: | --admin-user ADMIN | This is the "Admin" unique to ADB; the one that was created for you when you first provisioned your Autonomous database. This doesn't exist for a non-ADB installation. You'd use something like PDB_DBA or PDBDBA for this.|
+|Admin Password |:white_check_mark: |`--password-stdin < passwords.txt`| For simplicity, the passwords will all be identical. Maybe not the best approach, but for automating and for this example, it will make things much smoother. |
 |Runtime Username | :white_check_mark: | `--db-user ORDS_PUBLIC_USER_02` | You already have an `ORDS_PUBLIC_USER` in ADB. That is the "OG" ORDS runtime user. Each time you spin up a new compute instance, it's runtime user would be need to be something like: `ORDS_PUBLIC_USER_COMPUTE_XX` (where "XX" is a variable), or something similar. It just needs to be easily identifiable, easily tracked. |
 |Runtime Password | :white_check_mark: | `--password-stdin < passwords.txt` option| Same notes as above. |
 |PL/SQL Gateway Username | :white_check_mark: | `--gateway-user ORDS_PLSQL_GATEWAY_01` | An `ORDS_PLSQL_GATEWAY` user already exists. So you can name the subsequent users similar to how you've chosen for the `ORDS_PUBLIC_USER`. Something like: `ORDS_PLSQL_GATEWAY_COMPUTE_XX`|
@@ -579,14 +805,14 @@ Add the three passwords, one on each line for:
 Press `esc` key, followed by `qw!` to save and exit
 If you've forgotten the directory, issue the `pwd` command, and add your Wallet.zip file to the end of that path. This will be the value for your `--wallet` command option (see the table above).
 
-At this point you should have everything you need to complete the install. You can issue the `ls -a` command to verify this: 
+At this point you should have everything you need to complete the install. You can issue the `ls -a` command to verify this:
 
 ```sh
 [oracle@testinstance01 ~]$ ls -a
 .  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  passwords.txt  .viminfo  Wallet_tempadb.zip
 ```
 
-Installation Checklist
+<!-- Installation Checklist
 |Stuff| Ready/Complete | Notes |
 | --- | :--------------:| --- |
 | Correct Java set | <input type="checkbox"/> | GraalVM 17 or above if you want to take advantage of the `MLE/JS` and `GraphQL` features. |
@@ -595,7 +821,7 @@ Installation Checklist
 | `port 8080 open`| <input type="checkbox"/> |ORDS needs this for when it starts up, unless you are using HTTPS, then you'll need port 8443. |
 | `port 80 open`| <input type="checkbox"/> | Why this? I believe the Network Health Checker uses port 80 for its health checking/reporting. |
 | Wallet file ownership changed to `oracle:oinstall` | <input type="checkbox"/> | |
-| ORDS CLI command options ready| <input type="checkbox"/> | see Configuration Settings table above | |
+| ORDS CLI command options ready| <input type="checkbox"/> | see Configuration Settings table above | | -->
 
 ```sh
 ords --config /etc/ords/config install adb --admin-user ADMIN --db-user ORDS_PUBLIC_USER_COMPUTE_01 --gateway-user ORDS_PLSQL_GATEWAY_COMPUTE_01 --wallet /home/oracle/Wallet_tempadb.zip --password-stdin < passwords.txt
@@ -754,19 +980,7 @@ Just to be safe, and so we are all on the same page, navigate back to the `/home
 .  ..  .bash_history  .bash_logout  .bash_profile  .bashrc  logs  passwords.txt  .viminfo  Wallet_tempadb.zip
 [oracle@testinstance01 ~]$ 
 ```
-
-[oracle@testinstance01 bin]$ pwd
-/opt/oracle/ords/bin
-
-
-`echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile`
-`source ~/.bash_profile`
-`ords --config /etc/ords/config serve`
-
-
-We used `./bashrc` when setting Java. But we use `./bash_profile` when setting the ORDS `/bin`, so what is it? What is preferred or more correct; `./bashrc` or `./bash_profile`? Details https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30
-
-```sh
+<!-- ```sh
 [opc@testinstance01 ~]$ echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile
 [opc@testinstance01 ~]$ source ~/.bash_profile
 [opc@testinstance01 ~]$ env
@@ -847,9 +1061,9 @@ BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec
  _mlstatus=$?;
  return $_mlstatus
 }
-```
+``` -->
 
-```sh
+<!-- ```sh
 [opc@testinstance01 ~]$ sudo su - oracle
 Last login: Tue Mar 18 14:55:24 GMT 2025 on pts/0
 [oracle@testinstance01 ~]$ env
@@ -917,7 +1131,7 @@ BASH_FUNC__module_raw%%=() {  eval "$(/usr/bin/tclsh '/usr/share/Modules/libexec
  return $_mlstatus
 }
 _=/usr/bin/env
-```
+``` -->
 
 Should you as oracle or opc? 
 
@@ -929,7 +1143,7 @@ Even though you set the ords/bin path as the opc user, everything still seems to
 
 And output you'll see:
 
-```sh
+<!-- ```sh
 ORDS: Release 24.4 Production on Tue Mar 18 14:59:48 2025
 
 Copyright (c) 2010, 2025, Oracle.
@@ -1019,7 +1233,7 @@ Mapped local pools from /etc/ords/config/databases:
 Oracle REST Data Services version : 24.4.0.r3451601
 Oracle REST Data Services server info: jetty/12.0.13
 Oracle REST Data Services java info: Java HotSpot(TM) 64-Bit Server VM GraalVM EE 21.3.13 (build: 17.0.14+8-LTS-jvmci-21.3-b98 mixed mode, sharing)
-```
+``` -->
 
 Kill the process and review logs 
 How do I navigate to the landing page for this compute instance? 
@@ -1078,11 +1292,11 @@ Commands:
                                  roles. Display the user information.
 ```
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 config]$ ords config list --include-defaults
-```
+``` -->
 
-```sh
+<!-- ```sh
 2025-03-18T15:35:18Z INFO   ORDS has not detected the option '--config' and this will be set up to the default directory.
 
 ORDS: Release 24.4 Production on Tue Mar 18 15:35:20 2025
@@ -1218,9 +1432,9 @@ standalone.https.port                       8443                                
 standalone.static.context.path              /i                                      Default    
 standalone.static.path                                                              Default    
 standalone.stop.timeout                     10s                                     Default    
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 config]$ ords --config /etc/ords/config config set feature.sdw true
 
 ORDS: Release 24.4 Production on Tue Mar 18 15:37:51 2025
@@ -1231,9 +1445,9 @@ Configuration:
   /etc/ords/config
 
 The setting named: feature.sdw was set to: true in configuration: default
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 config]$ ords --config /etc/ords/config config list --include-defaults
 
 ORDS: Release 24.4 Production on Tue Mar 18 15:38:23 2025
@@ -1369,9 +1583,9 @@ standalone.https.port                       8443                                
 standalone.static.context.path              /i                                      Default    
 standalone.static.path                                                              Default    
 standalone.stop.timeout                     10s                                     Default
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 databases]$ cd default
 [oracle@testinstance01 default]$ ls -a
 .  ..  pool.xml  wallet
@@ -1387,9 +1601,9 @@ standalone.stop.timeout                     10s                                 
 <entry key="plsql.gateway.mode">proxied</entry>
 <entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
 </properties>
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 global]$ ords --config /etc/ords/config config set database.api.enabled true
 
 ORDS: Release 24.4 Production on Tue Mar 18 15:53:04 2025
@@ -1410,9 +1624,9 @@ Configuration:
   /etc/ords/config
 
 The setting named: restEnabledSql.active was set to: true in configuration: default
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 global]$ cat settings.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -1420,9 +1634,9 @@ The setting named: restEnabledSql.active was set to: true in configuration: defa
 <comment>Saved on Tue Mar 18 15:53:04 UTC 2025</comment>
 <entry key="database.api.enabled">true</entry>
 </properties>
-```
+``` -->
 
-```sh
+<!-- ```sh
 [oracle@testinstance01 default]$ cat pool.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -1436,8 +1650,8 @@ The setting named: restEnabledSql.active was set to: true in configuration: defa
 <entry key="restEnabledSql.active">true</entry>
 <entry key="security.requestValidationFunction">ords_util.authorize_plsql_gateway</entry>
 </properties>
-```
+``` -->
 
-*If you do not include the `--feature-sdw <BOOLEAN>` and then you change your mind later. It isn't enough to just issue the `ords config set feature.sdw true` command. Because, your `database.api.enabled` and `restEnabledSql.active` are not set at this time, so you still have to configure them manually. 
+<!-- *If you do not include the `--feature-sdw <BOOLEAN>` and then you change your mind later. It isn't enough to just issue the `ords config set feature.sdw true` command. Because, your `database.api.enabled` and `restEnabledSql.active` are not set at this time, so you still have to configure them manually. 
 
-I believe for a High-availability set-up, you don't need access to Database Actions. Since this set up is probably more geared toward/for REST APIs only. 
+I believe for a High-availability set-up, you don't need access to Database Actions. Since this set up is probably more geared toward/for REST APIs only.  -->
