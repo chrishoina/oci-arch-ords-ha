@@ -316,7 +316,9 @@ Here are some observations at this point (in no particular order):
 
 ### 4.1 Add the ORDS <code>bin</code> to your <code>$PATH</code>
 
-This is another step that can really be done anytime between the time you installed the ORDS RPM into your compute instance until you issue the `ords serve` command. The complete steps are in [our docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30). Below is an abbreviated demonstration. Commands I issued: 
+This is another step that can really be done anytime between the time you installed the ORDS RPM into your compute instance until you issue the `ords serve` command. The complete steps are in [our docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-oracle-rest-data-services.html#GUID-D86804FC-4365-4499-B170-2F901C971D30). Below is an abbreviated demonstration.  
+
+Commands I issued:
 
 ```sh
 echo -e 'export PATH="$PATH:/opt/oracle/ords/bin"' >> ~/.bash_profile
@@ -343,9 +345,9 @@ sudo firewall-cmd --permanent  --add-port=80/tcp
 sudo firewall-cmd --reload
 ```
 
-If you want to inspect what you just did, you can issue the `sudo firewall-cmd --list-all-zones` command to review your firewall settings.[^4.2] I'm including an image. Below that image is a complete print out of what I observed in my compute instance's terminal.
+If you want to inspect what you just did, you can issue the `sudo firewall-cmd --list-all-zones` command to review your firewall settings.[^41] I'm including an image. Below that image is a complete print out of what I observed in my compute instance's terminal.
 
-[4.2]: You owe it to yourself to read about the firewall utility. We often gloss over it in tutorials, but [here are the docs](https://firewalld.org/documentation/man-pages/firewall-cmd.html) for reference.
+[^41]: You owe it to yourself to read about the firewall utility. We often gloss over it in tutorials, but [here are the docs](https://firewalld.org/documentation/man-pages/firewall-cmd.html) for reference.
 
 ![23-firewall-excerpt](./images/23-firewall-excerpt.png " ")
 
@@ -511,15 +513,15 @@ work
 
 ### 4.2 Setup, continued
 
-You'll perform this install with the ORDS CLI.[^4.2a] The following steps assume you have an ADB up and running. You'll also need to download your Cloud Wallet and *securely copy it* to your compute instance.[^4.2b] And remember these TNS names for later.
+You'll perform this install with the ORDS CLI.[^421] The following steps assume you have an ADB up and running. You'll also need to download your Cloud Wallet and *securely copy it* to your compute instance.[^422] And remember these TNS names for later.
 
 ![18-database-connection-button](./images/18-database-connection-button.png " ")
 
 ![19-download-wallet-and-tns-names](./images/19-download-wallet-and-tns-names.png " ")
 
-[4.2a]: And [here](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0) is everything you'll need to perform a *silent install* for and ORDS *in ADB* installation. I would read through that entire section, just so you understand what is happening during this install.
+[421]: And [here](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/24.4/ordig/installing-and-configuring-customer-managed-ords-autonomous-database.html#ORDIG-GUID-5EC91403-2176-4C62-8793-E32BBF3FE0D0) is everything you'll need to perform a *silent install* for and ORDS *in ADB* installation. I would read through that entire section, just so you understand what is happening during this install.
 
-[4.2b]: [About the Cloud Wallet](https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
+[422]: [About the Cloud Wallet](https://docs.oracle.com/en-us/iaas/autonomous-database/doc/download-client-credentials.html
 ).  
 
 #### 4.2.1 Copy the Cloud Wallet to your compute instance
