@@ -48,16 +48,16 @@ I will assume you've followed the instructions in that link above. The only mino
 
 ![04-ssh-folder](./images/04-ssh-folder.png " ")
 
-Otherwise I followed the same exact steps in that tutorial. Here are the steps I took: 
+Otherwise I followed the same exact steps in that tutorial. Here are the steps I took:
 
 1. I `cd'd` to the `.ssh` folder/directory on my local computer (my Macbook).
-2. I then issued the `chmod 400 [your private key file]` command to change the file's permissions[^3.1]
+2. I then issued the `chmod 400 [your private key file]` command to change the file's permissions[^31]
 3. Use `ssh -i [your private key file] opc@[your compute's public IP address`. Accept the "Are you sure you want to continue connecting (yes/no/[fingerprint])?" question (i.e. "yes").
 4. You'll be logged in as the `opc` user.
 
 > :memo: **Note:** Just an FYI, you'll find yourself in the `/home/opc` directory. It's good to know where you are at all times, because a lot is about to happen in the next few steps, and it is *extremely easy* to get lost.
 
-[^3.1]: `chmod 400` can be translated as "the current user has read-only access." Learn more about the [chmod](https://ss64.com/bash/chmod.html) commmand. While you are there, enter `400` in that file permissions table to see the how the `read/write/execute` permissions change for the `Owner/Group/Other` fields.
+[^31]: `chmod 400` can be translated as "the current user has read-only access." Learn more about the [chmod](https://ss64.com/bash/chmod.html) commmand. While you are there, enter `400` in that file permissions table to see the how the `read/write/execute` permissions change for the `Owner/Group/Other` fields.
 
 <!-- Here is where things are unclear. Should we switch users now, to the `oracle` user? Or should we issue the `sudo ords install`, `sudo sqlcl install`, and `sudo graalvm install` commands as `opc`? -->
 
@@ -73,7 +73,11 @@ Otherwise I followed the same exact steps in that tutorial. Here are the steps I
 >
 > ![07-returning-to-home-opc-dir](./images/07-returning-to-home-opc-dir.png " ")
 
-Onto the set up. Next I'll install my "dependencies": ORDS, SQLcl, GraalVM.
+Onto the set up. Next I'll install my "dependencies":
+
+- ORDS
+- SQLcl
+- GraalVM
 
 ### 3.2 Installing dependencies
 
