@@ -1441,4 +1441,3 @@ The setting named: restEnabledSql.active was set to: true in configuration: defa
 *If you do not include the `--feature-sdw <BOOLEAN>` and then you change your mind later. It isn't enough to just issue the `ords config set feature.sdw true` command. Because, your `database.api.enabled` and `restEnabledSql.active` are not set at this time, so you still have to configure them manually. 
 
 I believe for a High-availability set-up, you don't need access to Database Actions. Since this set up is probably more geared toward/for REST APIs only. 
-
