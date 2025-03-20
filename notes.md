@@ -947,8 +947,9 @@ What we are doing next:
 
 1. Turning this into a proper Terraform stack with: VCN, subnets, route tables, Load Balancers, and support for various Linux OS's and Compute shapes.
 2. Reproducing these steps in OCI but for the other two installation configurations: ORDS in Apache Tomcat & ORDS in WebLogic Server
-3. You tell me...what do you want to see next?
+3. Reproducing these steps, but with an [Oracle Base Database Service](https://docs.oracle.com/en/cloud/paas/base-database/about/index.html#articletitle) database.
+You tell me...what do you want to see next?
 
-If you've made it this far, congrats. Your certification badge is in the mail. 
+If you've made it this far, congrats. Your certification badge is in the mail.
 
 🫡 See you on the other side.
