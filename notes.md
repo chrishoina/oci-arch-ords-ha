@@ -1,4 +1,4 @@
-# 1 ORDS in an OCI compute instance using available RPMs
+# 1 How to configure, perform an ADB install of ORDS in an OCI Compute Instance, and deploy in Standalone mode: 2025 Edition
 
 <!-- ## 2 Some questions
 
@@ -11,7 +11,9 @@
 
 ## 2 Database details
 
-Some select details about the Autonomous datbase used for this demonstration:
+I assume you have an ADB that is already up and running. And that you are the `ADMIN` user.
+
+Here are some select details about the Autonomous datbase used for this demonstration:
 
 | Field | Details |
 | ---- | --------------- |
@@ -23,7 +25,9 @@ Some select details about the Autonomous datbase used for this demonstration:
 
 ## 3 Compute Instance
 
-> :bulb: Create and connect to your first OCI Compute Instance. [Learn how](https://docs.oracle.com/en-us/iaas/Content/Compute/tutorials/first-linux-instance/overview.htm).
+The same assumptions apply; that you already have an OCI Compute Instance up and running.
+
+> :bulb: If not, you create and connect to your first OCI Compute Instance. [Learn how](https://docs.oracle.com/en-us/iaas/Content/Compute/tutorials/first-linux-instance/overview.htm). That will get you most of the way there. FYI, I'm using a Linux instance *not* Ubuntu.
 
 Below are the details of the compute instance I'm using in this demonstration:
 
@@ -38,6 +42,7 @@ Below are the details of the compute instance I'm using in this demonstration:
 | Local disk | Block storage only | |
 
 ![02-compute-details-01](./images/02-compute-details-01.png " ")
+
 ![03-compute-details-02](./images/03-compute-details-02.png " ")
 
 [^3]: When you view the compute instance details in the OCI dashboard, the OS shows what looks to be a "fully-qualified" version. However, when you first create your compute instance, you'll see soemthing like `Linux 9`. Not really relevant, but nice to be aware of. But when you view the details (after the instance has provisioned) it will show something like this: `Oracle-Linux-9.5-2025.02.28-0`. If you intend on doing anything with Terraform stacks, I believe you'll use `9.5` as the OS. Just noting for the future.
@@ -93,7 +98,7 @@ I should be clear, you aren't installing ORDS, you are just pulling the ORDS RPM
 
 `sudo dnf install ords -y`
 
-> :bulb: **TIP:** Including the `-y` saves you from having to manually accept the installation of the RPM. The same applies for ORDS, SQLcl, and Java. We are going to automate this for a Terraform stack, so we are doing two things here: (1) documenting how to do this in 2025 and (2) prepping for the next phase (Terraform).
+> :bulb: **TIP:** Including the `-y` saves you from having to manually accept the installation of the RPM. The same applies for SQLcl, and Java. In the future will automate this using a Terraform stack. So at this stage we are doing two things here: (1) documenting how to do this in 2025 and (2) prepping for the next phase (Terraform).
 
 :memo: **NOTE:** Pay attention to the helpful notes, after the ORDS RPM has been installed.
 
