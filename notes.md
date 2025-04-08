@@ -823,7 +823,7 @@ For and ORDS in ADB silent installation, you'll need the following (your configu
 
 #### 4.3.1 Setting up a passwords.txt file
 
-As the `oracle` user you'll want to create a text file that stores your usernames' passwords. Then during the actual install, you can "rdirect STDIN to a file that contains the password" [^431] for each of the following users:
+As the `oracle` user you'll want to create a text file that stores your usernames' passwords. Then during the actual install, you can "rdirect STDIN to a file that contains the passwords [^431] for each of the following users:
 
 - `admin-user` *aka* the `ADMIN` user
 - `db-user` *aka* the `ORDS_PUBLIC_USER`
