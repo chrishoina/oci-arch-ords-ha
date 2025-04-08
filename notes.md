@@ -572,7 +572,7 @@ And then, if you issue the `ls -a` command, you'll see it has been relocated:
 
 ![27-chown-cloud-wallet](./images/27-chown-cloud-wallet.png " ")
 
-If you switch to the `oracle` user, with `sudo su - oracle`, then issue the `ls -a` command, you'll see the file. Issue the 'ls -l` command to view the file properties.[^4221] You'll see a print out simliar to this[^4222]:
+If you switch to the `oracle` user, with `sudo su - oracle`, then issue the `ls -a` command, you'll see the file. Issue the `ls -l` command to view the file properties.[^4221] You'll see a print out simliar to this[^4222]:
 
 ```sh
 total 24
