@@ -550,7 +550,7 @@ scp -i [Your compute instance's private key] /the/locally/saved/path/to/your/wal
    >
    > ![21-database-short-name](./images/21-database-short-name.png " ")
 
-After you copy over the wallet `.zip` file you can verify its existence by navigating to the `/home/opc` directory. You should now see it in there; but you're note finished yet.
+After you copy over the wallet `.zip` file you can verify its existence by navigating to the `/home/opc` directory. You should now see it in there; but you're not finished yet.
 
 ![22-verifying-the-wallet-exists](./images/22-verifying-the-wallet-exists.png " ")
 
